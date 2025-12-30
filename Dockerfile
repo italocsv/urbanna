@@ -5,4 +5,4 @@ COPY . /app
 
 EXPOSE 8080
 
-CMD ["php", "-S", "0.0.0.0:8080", "process-video.php"]
+CMD ["php", "-S", "0.0.0.0:8080", "process_video.php"]
