@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 
 /**
  * ===============================
- * 1. Validação básica da requisição
+ * 1. Validação básica da requisiçãoa
  * ===============================
  */
 
@@ -134,15 +134,76 @@ $fileMd5  = md5_file($outputFile);
 
 /**
  * ===============================
- * 7. Resposta final (ÚNICA)
+ * 7. Dividir o vídeo em partes de 4MB
+ * ===============================
+ */
+
+$chunkSize = 4 * 1024 * 1024; // 4MB
+$chunksDir = $tmpOutputDir . "/chunks_$uniqueName";
+
+@mkdir($chunksDir, 0777, true);
+
+// ========== Particionamento binário (robusto e performático) ==========
+
+$handle = fopen($outputFile, 'rb');
+
+if (!$handle) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Não foi possível abrir o vídeo para leitura']);
+    exit;
+}
+
+$partIndex   = 0;
+$parts       = [];
+$totalBytes = 0;
+
+while (!feof($handle)) {
+    $data = fread($handle, $chunkSize);
+    if ($data === false || $data === '') {
+        break;
+    }
+
+    $partFile = $chunksDir . "/part_$partIndex.bin";
+    file_put_contents($partFile, $data);
+
+    $partSize = filesize($partFile);
+
+    $parts[] = [
+        'part_seq'  => $partIndex,
+        'file'      => basename($partFile),
+        'size'      => $partSize,
+        'md5'       => md5_file($partFile)
+    ];
+
+    $totalBytes += $partSize;
+    $partIndex++;
+}
+
+fclose($handle);
+
+/**
+ * ===============================
+ * 8. Resposta final (ÚNICA)
  * ===============================
  */
 
 echo json_encode([
-    'status'     => 'ok',
-    'message'    => 'Vídeo processado com sucesso',
-    'duration'   => $duration,
-    'file_name'  => basename($outputFile),
-    'file_size'  => $fileSize,
-    'file_md5'   => $fileMd5
+    'status'        => 'ok',
+    'message'       => 'Vídeo processado e particionado com sucesso',
+
+    'video' => [
+        'file_name' => basename($outputFile),
+        'file_size' => $fileSize,
+        'file_md5'  => $fileMd5,
+        'duration'  => $duration
+    ],
+
+    'chunk_config' => [
+        'chunk_size_bytes' => $chunkSize,
+        'total_parts'      => count($parts)
+    ],
+
+    'part_seq_list' => array_column($parts, 'part_seq'),
+
+    'parts' => $parts
 ]);
