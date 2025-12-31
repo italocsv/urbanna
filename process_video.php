@@ -57,16 +57,25 @@ $uniqueName = uniqid('video_', true);
 $inputFile  = "$tmpInputDir/$uniqueName.$ext";
 
 // Baixa vídeo
-$videoData = @file_get_contents($videoUrl);
-if ($videoData === false) {
+$fp = fopen($inputFile, 'w');
+
+$ch = curl_init($videoUrl);
+curl_setopt_array($ch, [
+    CURLOPT_FILE => $fp,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_TIMEOUT => 120,
+    CURLOPT_FAILONERROR => true
+]);
+
+$ok = curl_exec($ch);
+curl_close($ch);
+fclose($fp);
+
+if (!$ok || !file_exists($inputFile) || filesize($inputFile) === 0) {
     http_response_code(400);
-    echo json_encode([
-        'error' => 'Falha ao baixar vídeo'
-    ]);
+    echo json_encode(['error' => 'Falha ao baixar vídeo']);
     exit;
 }
-
-file_put_contents($inputFile, $videoData);
 
 /**
  * ===============================
