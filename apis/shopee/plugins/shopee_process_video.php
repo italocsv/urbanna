@@ -21,8 +21,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $raw = file_get_contents('php://input');
 $data = json_decode($raw, true);
 
+// Valida JSON inválido
+if (!$data) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'JSON inválido'
+    ]);
+    exit;
+}
+
+
 // Valida envio de shop_id
-if (!isset($_GET['shop_id'])) {
+if (!isset($data['shop_id'])) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(400);
     echo json_encode([
@@ -32,7 +43,7 @@ if (!isset($_GET['shop_id'])) {
 }
 
 //Valida envio de video_url
-if (!isset($_GET['video_url'])) {
+if (!isset($data['video_url'])) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(400);
     echo json_encode([
