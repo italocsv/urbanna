@@ -151,7 +151,7 @@ $fileForRequest = new CURLFile(
 
 // ENVIAR REQUISIÇÃO
 $postFields = [
-    'file' => $fileForRequest
+    'image' => $fileForRequest
 ];
 
 $ch = curl_init($request_url);
