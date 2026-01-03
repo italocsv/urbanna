@@ -1,4 +1,6 @@
 <?php
+require $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
+
 header('Content-Type: application/json');
 
 /**
@@ -57,7 +59,7 @@ $videoUrl = $data['video_url'];
 
 
 // =================== CONEXÃO MYSQL ===================
-$config = require __DIR__ . '/config/db_mysql_hostgator.php';
+$config = require BASE_PATH . '/config/db_mysql_hostgator.php';
 
 $conn = new mysqli(
     $config['host'],
