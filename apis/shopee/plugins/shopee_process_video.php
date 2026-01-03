@@ -80,7 +80,7 @@ if ($conn->connect_error) {
 // ============ BUSCA DADOS NO BANCO DE DADOS ============
 
 $stmt = $conn->prepare("SELECT partner_id, partner_key, host FROM lojaur05_tagplus.apikey_shopee WHERE shop_id = ?");
-$stmt->bind_param("s", $shop_id);
+$stmt->bind_param("s", $shopId);
 $stmt->execute();
 $stmt->bind_result($partner_id, $partner_key, $host);
 $stmt->fetch();
@@ -90,7 +90,7 @@ if (!$partner_id || !$partner_key || !$host) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(400) ;
     echo json_encode([
-        'error' => "Nenhum partner_id ou partner_key ou host encontrado para o shop_id: $shop_id"]);
+        'error' => "Nenhum partner_id ou partner_key ou host encontrado para o shop_id: $shopId"]);
     exit;
 }
 
