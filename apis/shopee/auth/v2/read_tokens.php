@@ -76,13 +76,6 @@ if (!$partner_id || !$partner_key || !$host || !$access_token) {
     exit;
 }
 
-echo json_encode([
-        'partner_id' => $partner_id,
-        'partner_key' => $partner_key,
-        'host' => $host,
-        'access_token' => $access_token
-    ]);
-
 return json_encode([
     'partner_id' => $partner_id,
     'partner_key' => $partner_key,
