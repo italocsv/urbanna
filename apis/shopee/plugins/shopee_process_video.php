@@ -77,23 +77,6 @@ if ($conn->connect_error) {
     exit;
 }
 
-// ============ BUSCA DADOS NO BANCO DE DADOS ============
-
-$stmt = $conn->prepare("SELECT partner_id, partner_key, host FROM lojaur05_tagplus.apikey_shopee WHERE shop_id = ?");
-$stmt->bind_param("s", $shopId);
-$stmt->execute();
-$stmt->bind_result($partner_id, $partner_key, $host);
-$stmt->fetch();
-$stmt->close();
-
-if (!$partner_id || !$partner_key || !$host) {
-    header('Content-Type: application/json; charset=utf-8');
-    http_response_code(400) ;
-    echo json_encode([
-        'error' => "Nenhum partner_id ou partner_key ou host encontrado para o shop_id: $shopId"]);
-    exit;
-}
-
 /**
  * ===============================
  * 2. Preparação de diretórios
@@ -252,6 +235,40 @@ while (!feof($handle)) {
 }
 
 fclose($handle);
+
+/**
+ * ===============================
+ * Envia Video para Shopee
+ * ===============================
+ */
+
+// ============ BUSCA DADOS NO BANCO DE DADOS ============
+
+$stmt = $conn->prepare("SELECT partner_id, partner_key, host, access_token FROM lojaur05_tagplus.apikey_shopee WHERE shop_id = ?");
+$stmt->bind_param("s", $shopId);
+$stmt->execute();
+$stmt->bind_result($partner_id, $partner_key, $host);
+$stmt->fetch();
+$stmt->close();
+
+if (!$partner_id || !$partner_key || !$host) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400) ;
+    echo json_encode([
+        'error' => "Nenhum partner_id ou partner_key ou host encontrado para o shop_id: $shopId"]);
+    exit;
+}
+
+$apiPath = '/api/v2/media_space/init_video_upload';
+$timestamp = time();
+$baseString = $partner_id . $apiPath .  $timestamp . $access_token . $shopId;
+
+$sign = hash_hmac( 
+    'sha256',
+    $baseString,
+    $partner_key
+);
+
 
 /**
  * ===============================
