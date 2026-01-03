@@ -170,17 +170,9 @@ if ($response === false) {
 
 curl_close($ch);
 
-echo $response;
-
 // APAGAR ARQUIVO
 if (file_exists($finalFile)) {
     unlink($finalFile);
 }
 
-
-echo json_encode([
-        'partner_id' => $partner_id,
-        'partner_key' => $partner_key,
-        'host' => $host,
-        'access_token' => $access_token
-    ]);
+echo $response;
