@@ -9,6 +9,7 @@ header('Content-Type: application/json');
 
 // Aceita apenas POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
     http_response_code(405);
     echo json_encode([
         'error' => 'Method not allowed'
@@ -22,6 +23,7 @@ $data = json_decode($raw, true);
 
 // Valida envio de shop_id
 if (!isset($_GET['shop_id'])) {
+    header('Content-Type: application/json; charset=utf-8');
     http_response_code(400);
     echo json_encode([
         'error' => 'Parametro shop_id obrigatório'
@@ -31,6 +33,7 @@ if (!isset($_GET['shop_id'])) {
 
 //Valida envio de video_url
 if (!isset($_GET['video_url'])) {
+    header('Content-Type: application/json; charset=utf-8');
     http_response_code(400);
     echo json_encode([
         'error' => 'Parâmetro video_url obrigatório'
@@ -40,6 +43,43 @@ if (!isset($_GET['video_url'])) {
 
 $shopId   = $data['shop_id'];
 $videoUrl = $data['video_url'];
+
+
+// =================== CONEXÃO MYSQL ===================
+$config = require '/config/db_mysql_hostgator.php';
+
+$conn = new mysqli(
+    $config['host'],
+    $config['user'],
+    $config['pass'],
+    $config['db']
+);
+
+if ($conn->connect_error) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Erro de conexão com banco de dados: ' . $conn->connect_error
+    ]);
+    exit;
+}
+
+// ============ BUSCA DADOS NO BANCO DE DADOS ============
+
+$stmt = $conn->prepare("SELECT partner_id, partner_key, host FROM lojaur05_tagplus.apikey_shopee WHERE shop_id = ?");
+$stmt->bind_param("s", $shop_id);
+$stmt->execute();
+$stmt->bind_result($partner_id, $partner_key, $host);
+$stmt->fetch();
+$stmt->close();
+
+if (!$partner_id || !$partner_key || !$host) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400) ;
+    echo json_encode([
+        'error' => "Nenhum partner_id ou partner_key ou host encontrado para o shop_id: $shop_id"]);
+    exit;
+}
 
 /**
  * ===============================
