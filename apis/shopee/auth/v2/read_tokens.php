@@ -2,6 +2,8 @@
 require $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
 header('Content-Type: application/json');
 
+// =================== VALIDAÇÃO DA REQUISIÇÃO ===================
+
 // Aceita apenas POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Content-Type: application/json; charset=utf-8');
