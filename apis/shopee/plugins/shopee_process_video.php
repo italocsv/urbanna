@@ -20,15 +20,25 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $raw = file_get_contents('php://input');
 $data = json_decode($raw, true);
 
-// Valida parâmetro obrigatório
-if (!$data || empty($data['video_url'])) {
+// Valida envio de shop_id
+if (!isset($_GET['shop_id'])) {
     http_response_code(400);
     echo json_encode([
-        'error' => 'video_url obrigatório'
+        'error' => 'Parametro shop_id obrigatório'
     ]);
     exit;
 }
 
+//Valida envio de video_url
+if (!isset($_GET['video_url'])) {
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Parâmetro video_url obrigatório'
+    ]);
+    exit;
+}
+
+$shopId   = $data['shop_id'];
 $videoUrl = $data['video_url'];
 
 /**
