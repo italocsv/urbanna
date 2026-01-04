@@ -546,8 +546,6 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 curl_close($ch);
 
-echo $response;
-exit;
 
 //4. Get Video Upload Result
 // =================== RECUPERA ACCESS TOKEN ===================
