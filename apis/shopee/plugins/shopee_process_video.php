@@ -425,6 +425,8 @@ foreach ($parts as $part) {
 
 $uploadCostMs = (int) round((microtime(true) - $uploadStart) * 1000);// Finaliza cálculo do tempo de upload
 
+$uploadParttResp = json_decode($response, true);
+
 // ===============================
 // 3. COMPLETE VIDEO UPLOAD
 // ===============================
@@ -467,8 +469,8 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 curl_close($ch);
 
-echo $response;
-exit;
+$completeUploadResp = json_decode($response, true);
+
 
 // ===============================
 // 4. GET VIDEO UPLOAD RESULT
@@ -511,7 +513,10 @@ curl_close($ch);
 $result = json_decode($response, true);
 $status = $result['response']['status'] ?? null;
 
-echo $response;
+$getVideoResp = json_decode($response, true);
+
+echo $initResp . "\n\n" . $uploadParttResp . "\n\n" . $completeUploadResp . "\n\n" . $getVideoResp;
+
 
 /**
  * ===============================
