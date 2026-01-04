@@ -496,7 +496,6 @@ $payload = [
     'video_upload_id' => $videoUploadId,
 ];
 
-while 
 $ch = curl_init($request_url);
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
