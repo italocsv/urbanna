@@ -457,21 +457,27 @@ foreach ($parts as $part) {
     $params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&sign=" . $sign;
     $request_url = $host . $api_path . $params_url;
 
-    $binary = file_get_contents($chunksDir . '/' . $part['file']);
+    // caminho real do chunk
+    $chunkFile = $chunksDir . '/' . $part['file'];
 
+    // payload MULTIPART
     $payload = [
         'video_upload_id' => $videoUploadId,
         'part_seq'        => $part['part_seq'],
-        'part_content'    => base64_encode($binary)
+        'content_md5'     => md5_file($chunkFile),
+        'part_content'    => new CURLFile(
+            $chunkFile,
+            'application/octet-stream',
+            basename($chunkFile)
+        )
     ];
 
     $ch = curl_init($request_url);
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_POSTFIELDS => $payload,
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 120,
-        CURLOPT_HTTPHEADER => ['Content-Type: application/json']
+        CURLOPT_TIMEOUT => 120
     ]);
 
     $response = curl_exec($ch);
