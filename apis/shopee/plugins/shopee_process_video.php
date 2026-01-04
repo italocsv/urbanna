@@ -467,6 +467,9 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 curl_close($ch);
 
+echo $response;
+exit;
+
 // ===============================
 // 4. GET VIDEO UPLOAD RESULT
 // ===============================
@@ -493,6 +496,7 @@ $payload = [
     'video_upload_id' => $videoUploadId,
 ];
 
+while 
 $ch = curl_init($request_url);
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
@@ -504,6 +508,9 @@ curl_setopt_array($ch, [
 
 $response = curl_exec($ch);
 curl_close($ch);
+
+$result = json_decode($response, true);
+$status = $result['response']['status'] ?? null;
 
 echo $response;
 
