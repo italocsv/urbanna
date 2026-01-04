@@ -1,7 +1,5 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
-$api_path = '/api/v2/media_space/init_video_upload';
-
 header('Content-Type: application/json');
 
 /**
@@ -55,7 +53,7 @@ if (!isset($data['video_url'])) {
     exit;
 }
 
-$shopId   = $data['shop_id'];
+$shop_id   = $data['shop_id'];
 $videoUrl = $data['video_url'];
 
 
@@ -240,7 +238,7 @@ fclose($handle);
 // ============ BUSCA DADOS NO BANCO DE DADOS ============
 
 $stmt = $conn->prepare("SELECT partner_id, partner_key, host, access_token FROM lojaur05_tagplus.apikey_shopee WHERE shop_id = ?");
-$stmt->bind_param("s", $shopId);
+$stmt->bind_param("s", $shop_id);
 $stmt->execute();
 $stmt->bind_result($partner_id, $partner_key, $host, $access_token);
 $stmt->fetch();
@@ -250,20 +248,9 @@ if (!$partner_id || !$partner_key || !$host || !$access_token) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(400) ;
     echo json_encode([
-        'error' => "Nenhum partner_id ou partner_key ou host encontrado para o shop_id: $shopId"]);
+        'error' => "Nenhum partner_id ou partner_key ou host encontrado para o shop_id: $shop_id"]);
     exit;
 }
-
-$api_path = '/api/v2/media_space/init_video_upload';
-$timestamp = time();
-$baseString = $partner_id . $api_path .  $timestamp . $access_token . $shopId;
-
-$sign = hash_hmac( 
-    'sha256',
-    $baseString,
-    $partner_key
-);
-
 
 /**
  * ===============================
@@ -315,7 +302,7 @@ if (!isset($access_token)) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(400);
     echo json_encode([
-        'error' => 'Access token não encontrado para o shop_id: ' . $shopId
+        'error' => 'Access token não encontrado para o shop_id: ' . $shop_id
     ]);
     exit;
 }
@@ -323,14 +310,14 @@ if (!isset($access_token)) {
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
 $api_path = "/api/v2/media_space/init_video_upload";
 $timestamp = time();
-$base_string = $partner_id . $timestamp . $access_token . $shopId;
+$base_string = $partner_id . $timestamp . $access_token . $shop_id;
 $sign = hash_hmac(
     'sha256',
     $base_string,
     $partner_key
 );
 
-$params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&sign=" . $sign;
+$params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&shop_id=" . $shop_id . "&sign=" . $sign;
 $request_url = $host . $api_path . $params_url;
 
 $payload = [
@@ -373,7 +360,7 @@ if (!isset($access_token)) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(400);
     echo json_encode([
-        'error' => 'Access token não encontrado para o shop_id: ' . $shopId
+        'error' => 'Access token não encontrado para o shop_id: ' . $shop_id
     ]);
     exit;
 }
@@ -442,7 +429,7 @@ if (!isset($access_token)) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(400);
     echo json_encode([
-        'error' => 'Access token não encontrado para o shop_id: ' . $shopId
+        'error' => 'Access token não encontrado para o shop_id: ' . $shop_id
     ]);
     exit;
 }
@@ -491,7 +478,7 @@ if (!isset($access_token)) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(400);
     echo json_encode([
-        'error' => 'Access token não encontrado para o shop_id: ' . $shopId
+        'error' => 'Access token não encontrado para o shop_id: ' . $shop_id
     ]);
     exit;
 }
@@ -500,10 +487,10 @@ if (!isset($access_token)) {
 $api_path = "/api/v2/media_space/get_video_upload_result";
 $timestamp = time();
 
-$baseString = $partner_id . $api_path . $timestamp . $access_token . $shopId;
+$baseString = $partner_id . $api_path . $timestamp . $access_token . $shop_id;
 $sign = hash_hmac('sha256', $baseString, $partner_key);
 
-$params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&access_token=" . $access_token . "&shop_id=" . $shopId . "&sign=" . $sign;
+$params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&access_token=" . $access_token . "&shop_id=" . $shop_id . "&sign=" . $sign;
 $request_url = $host . $api_path . $params_url;
 
 $payload = [
