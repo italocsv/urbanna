@@ -317,7 +317,7 @@ $sign = hash_hmac(
     $partner_key
 );
 
-$params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&shop_id=" . $shop_id . "&sign=" . $sign;
+$params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&access_token=" . $access_token . "&shop_id=" . $shop_id . "&sign=" . $sign;
 $request_url = $host . $api_path . $params_url;
 
 $payload = [
