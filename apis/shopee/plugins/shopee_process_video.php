@@ -312,7 +312,7 @@ if (!isset($access_token)) {
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
 $api_path = "/api/v2/media_space/init_video_upload";
 $timestamp = time();
-$base_string = $partner_id . $timestamp . $access_token . $shop_id;
+$base_string = $partner_id . $api_path . $timestamp . $access_token . $shop_id;
 $sign = hash_hmac(
     'sha256',
     $base_string,
@@ -377,7 +377,9 @@ foreach ($parts as $part) {
     $timestamp = time();
     $baseString = $partner_id . $api_path . $timestamp . $partner_key;
     $sign = hash_hmac(
-        'sha256', $baseString, $partner_key
+        'sha256',
+        $baseString,
+        $partner_key
     );
 
     $params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&sign=" . $sign;
@@ -440,10 +442,10 @@ if (!isset($access_token)) {
 $api_path = "/api/v2/media_space/complete_video_upload";
 $timestamp = time();
 
-$baseString = $partner_id . $api_path . $timestamp . $partner_key;
+$baseString = $partner_id . $api_path . $timestamp . $access_token . $shop_id;
 $sign = hash_hmac('sha256', $baseString, $partner_key);
 
-$params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&sign=" . $sign;
+$params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&access_token=" . $access_token . "&shop_id=" . $shop_id . "&sign=" . $sign;
 $request_url = $host . $api_path . $params_url;
 
 $payload = [
