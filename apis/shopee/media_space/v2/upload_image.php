@@ -151,7 +151,11 @@ $fileForRequest = new CURLFile(
 
 // ENVIAR REQUISIÇÃO
 $postFields = [
-    'image' => $fileForRequest
+    'image' => new CURLFile(
+        realpath($finalFile),          // IMPORTANTE
+        mime_content_type($finalFile),
+        basename($finalFile)
+    )
 ];
 
 $ch = curl_init($request_url);
@@ -159,7 +163,10 @@ $ch = curl_init($request_url);
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => $postFields,
-    CURLOPT_RETURNTRANSFER => true,    
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 120,
+    CURLOPT_SSL_VERIFYPEER => true,
+    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1
 ]);
 
 $response = curl_exec($ch);
