@@ -242,11 +242,11 @@ fclose($handle);
 $stmt = $conn->prepare("SELECT partner_id, partner_key, host, access_token FROM lojaur05_tagplus.apikey_shopee WHERE shop_id = ?");
 $stmt->bind_param("s", $shopId);
 $stmt->execute();
-$stmt->bind_result($partner_id, $partner_key, $host);
+$stmt->bind_result($partner_id, $partner_key, $host, $access_token);
 $stmt->fetch();
 $stmt->close();
 
-if (!$partner_id || !$partner_key || !$host) {
+if (!$partner_id || !$partner_key || !$host || $access_token) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(400) ;
     echo json_encode([
