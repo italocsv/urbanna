@@ -1,6 +1,6 @@
 <?php
 
-function getShopeeTokensByShopId((string)$shopId): array
+function getShopeeTokensByShopId(string $shopId): array
 {
     $config = require BASE_PATH . '/config/db_mysql_hostgator.php';
 
