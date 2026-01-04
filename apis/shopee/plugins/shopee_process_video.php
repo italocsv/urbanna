@@ -244,6 +244,8 @@ $stmt->bind_result($partner_id, $partner_key, $host, $access_token);
 $stmt->fetch();
 $stmt->close();
 
+$conn->close();
+
 if (!$partner_id || !$partner_key || !$host || !$access_token) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(400) ;
