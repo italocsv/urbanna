@@ -1,6 +1,6 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
-$apiPath = '/api/v2/media_space/init_video_upload';
+$api_path = '/api/v2/media_space/init_video_upload';
 
 header('Content-Type: application/json');
 
@@ -254,9 +254,9 @@ if (!$partner_id || !$partner_key || !$host || !$access_token) {
     exit;
 }
 
-$apiPath = '/api/v2/media_space/init_video_upload';
+$api_path = '/api/v2/media_space/init_video_upload';
 $timestamp = time();
-$baseString = $partner_id . $apiPath .  $timestamp . $access_token . $shopId;
+$baseString = $partner_id . $api_path .  $timestamp . $access_token . $shopId;
 
 $sign = hash_hmac( 
     'sha256',
@@ -321,7 +321,7 @@ if (!isset($access_token)) {
 }
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
-$apiPath = "/api/v2/media_space/init_video_upload";
+$api_path = "/api/v2/media_space/init_video_upload";
 $timestamp = time();
 $base_string = $partner_id . $timestamp . $access_token . $shopId;
 $sign = hash_hmac(
@@ -338,7 +338,7 @@ $payload = [
     'file_md5'  => $fileMd5,
 ];
 
-$ch = curl_init($requestUrl);
+$ch = curl_init($request_url);
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => json_encode($payload),
@@ -379,20 +379,20 @@ if (!isset($access_token)) {
 }
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
-$apiPath = "/api/v2/media_space/upload_video_part";
+$api_path = "/api/v2/media_space/upload_video_part";
 $timestamp = time();
 $uploadStart = microtime(true); // Inicia cálculo do tempo de upload
 
 foreach ($parts as $part) {
     
     $timestamp = time();
-    $baseString = $partner_id . $apiPath . $timestamp . $partner_key;
+    $baseString = $partner_id . $api_path . $timestamp . $partner_key;
     $sign = hash_hmac(
         'sha256', $baseString, $partner_key
     );
 
     $params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&sign=" . $sign;
-    $requestUrl = $host . $apiPath . $params_url;
+    $request_url = $host . $api_path . $params_url;
 
     $binary = file_get_contents($chunksDir . '/' . $part['file']);
 
@@ -402,7 +402,7 @@ foreach ($parts as $part) {
         'part_content'    => base64_encode($binary)
     ];
 
-    $ch = curl_init($requestUrl);
+    $ch = curl_init($request_url);
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => json_encode($payload),
@@ -448,14 +448,14 @@ if (!isset($access_token)) {
 }
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
-$apiPath = "/api/v2/media_space/complete_video_upload";
+$api_path = "/api/v2/media_space/complete_video_upload";
 $timestamp = time();
 
-$baseString = $partner_id . $apiPath . $timestamp . $partner_key;
+$baseString = $partner_id . $api_path . $timestamp . $partner_key;
 $sign = hash_hmac('sha256', $baseString, $partner_key);
 
 $params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&sign=" . $sign;
-$requestUrl = $host . $apiPath . $params_url;
+$request_url = $host . $api_path . $params_url;
 
 $payload = [
     'video_upload_id' => $videoUploadId,
@@ -465,7 +465,7 @@ $payload = [
     ],
 ];
 
-$ch = curl_init($requestUrl);
+$ch = curl_init($request_url);
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => json_encode($payload),
@@ -497,20 +497,20 @@ if (!isset($access_token)) {
 }
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
-$apiPath = "/api/v2/media_space/get_video_upload_result";
+$api_path = "/api/v2/media_space/get_video_upload_result";
 $timestamp = time();
 
-$baseString = $partner_id . $apiPath . $timestamp . $access_token . $shopId;
+$baseString = $partner_id . $api_path . $timestamp . $access_token . $shopId;
 $sign = hash_hmac('sha256', $baseString, $partner_key);
 
 $params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&access_token=" . $access_token . "&shop_id=" . $shopId . "&sign=" . $sign;
-$requestUrl = $host . $apiPath . $params_url;
+$request_url = $host . $api_path . $params_url;
 
 $payload = [
     'video_upload_id' => $videoUploadId,
 ];
 
-$ch = curl_init($requestUrl);
+$ch = curl_init($request_url);
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => json_encode($payload),
