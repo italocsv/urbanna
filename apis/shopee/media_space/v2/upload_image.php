@@ -1,6 +1,6 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
-$api_path = '/api/v2/media_space/upload_image';
+require BASE_PATH . '/apis/shopee/auth/v2/read_tokens.php';
 
 // =================== VALIDAÇÃO DA REQUISIÇÃO ===================
 
@@ -47,11 +47,13 @@ if (!isset($data['image_url'])) {
     exit;
 }
 
-$shopId = $data['shop_id'];
+$shop_id = $data['shop_id'];
 $image_url = $data['image_url'];
 
-// =================== RECUPERA ACCESS TOKEN ===================
-$tokens = require BASE_PATH . '/apis/shopee/auth/v2/read_tokens.php';
+// =====================================
+// RECUPERA TOKENS E DADOS DE REQUISIÇÃO
+// =====================================
+$tokens = getShopeeTokensByShopId($shop_id);
 
 $access_token = $tokens['access_token'];
 $partner_id   = $tokens['partner_id'];
@@ -59,6 +61,7 @@ $partner_key  = $tokens['partner_key'];
 $host         = $tokens['host'];
 
 // =================== DECLARA VARIÁVEIS ===================
+$api_path = '/api/v2/media_space/upload_image';
 $timestamp = time();
 $base_string = $partner_id . $api_path . $timestamp;
 $sign = hash_hmac(
