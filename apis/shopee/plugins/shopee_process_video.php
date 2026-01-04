@@ -321,7 +321,7 @@ if (!isset($access_token)) {
 }
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
-$apiPath = /api/v2/media_space/init_video_upload;
+$apiPath = "/api/v2/media_space/init_video_upload";
 $timestamp = time();
 $base_string = $partner_id . $timestamp . $access_token . $shopId;
 $sign = hash_hmac(
@@ -379,7 +379,7 @@ if (!isset($access_token)) {
 }
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
-$apiPath = /api/v2/media_space/upload_video_part;
+$apiPath = "/api/v2/media_space/upload_video_part";
 $timestamp = time();
 $uploadStart = microtime(true); // Inicia cálculo do tempo de upload
 
@@ -448,7 +448,7 @@ if (!isset($access_token)) {
 }
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
-$apiPath = /api/v2/media_space/complete_video_upload;
+$apiPath = "/api/v2/media_space/complete_video_upload";
 $timestamp = time();
 
 $baseString = $partner_id . $apiPath . $timestamp . $partner_key;
@@ -497,7 +497,7 @@ if (!isset($access_token)) {
 }
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
-$apiPath = /api/v2/media_space/get_video_upload_result;
+$apiPath = "/api/v2/media_space/get_video_upload_result";
 $timestamp = time();
 
 $baseString = $partner_id . $apiPath . $timestamp . $access_token . $shopId;
