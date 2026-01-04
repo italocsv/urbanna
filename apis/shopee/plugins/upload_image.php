@@ -1,6 +1,6 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
-require BASE_PATH . '/apis/shopee/auth/v2/read_tokens.php';
+require BASE_PATH . '/apis/shopee/auth/read_tokens.php';
 
 // =================== VALIDAÇÃO DA REQUISIÇÃO ===================
 
@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Lê  e valida JSON do body
+// Lê e valida JSON do body
 $raw = file_get_contents('php://input');
 $data = json_decode($raw, true);
 
@@ -53,6 +53,7 @@ $image_url = $data['image_url'];
 // =====================================
 // RECUPERA TOKENS E DADOS DE REQUISIÇÃO
 // =====================================
+
 $tokens = getShopeeTokensByShopId($shop_id);
 
 $access_token = $tokens['access_token'];

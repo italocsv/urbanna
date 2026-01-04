@@ -53,8 +53,34 @@ $shop_id   = $data['shop_id'];
 $video_url = $data['video_url'];
 
 // ===============================
-// PREPARAÇÃO DE DIRETÓRIOS
+// CONEXÃO MYSQL
 // ===============================
+
+
+// =================== CONEXÃO MYSQL ===================
+$config = require BASE_PATH . '/config/db_mysql_hostgator.php';
+
+$conn = new mysqli(
+    $config['host'],
+    $config['user'],
+    $config['pass'],
+    $config['db']
+);
+
+if ($conn->connect_error) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Erro de conexão com banco de dados: ' . $conn->connect_error
+    ]);
+    exit;
+}
+
+/**
+ * ===============================
+ * 2. Preparação de diretórios
+ * ===============================
+ */
 
 $tmpInputDir  = __DIR__ . '/tmp/input';
 $tmpOutputDir = __DIR__ . '/tmp/output';
@@ -62,9 +88,11 @@ $tmpOutputDir = __DIR__ . '/tmp/output';
 @mkdir($tmpInputDir, 0777, true);
 @mkdir($tmpOutputDir, 0777, true);
 
-// ===============================
-// DOWNLOAD DO VIDEO
-// ===============================
+/**
+ * ===============================
+ * 3. Download do vídeo
+ * ===============================
+ */
 
 // Descobre extensão (fallback mp4)
 $ext = pathinfo(parse_url($video_url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'mp4';
@@ -94,9 +122,11 @@ if (!$ok || !file_exists($inputFile) || filesize($inputFile) === 0) {
     exit;
 }
 
-// ===============================
-// VALIDAÇÃO DE DURAÇÃO (ffprobe)
-// ===============================
+/**
+ * ===============================
+ * 4. Validação de duração (ffprobe)
+ * ===============================
+ */
 
 $cmdDuration = "ffprobe -v error -show_entries format=duration "
              . "-of default=noprint_wrappers=1:nokey=1 "
@@ -121,9 +151,11 @@ if ($duration > 60) {
     ]);
 }
 
-// ===============================
-// CONVERSÃO PARA MP4 COMPATÍVEL COM SHOPEE
-// ===============================
+/**
+ * ===============================
+ * 5. Conversão para MP4 compatível Shopee
+ * ===============================
+ */
 
 $outputFile = "$tmpOutputDir/$uniqueName.mp4";
 
@@ -144,8 +176,9 @@ if (!file_exists($outputFile)) {
     exit;
 }
 
+
 // ===============================
-// AJUSTE SHOPEE: DURAÇÃO + RESOLUÇÃO + TAMANHO
+// 5. Ajuste Shopee: duração + resolução + tamanho
 // ===============================
 
 $outputFile = "$tmpOutputDir/$uniqueName.mp4";
@@ -215,16 +248,21 @@ if (filesize($outputFile) > 30 * 1024 * 1024) {
     exit;
 }
 
-// ===============================
-// METADADOS EXIGIDOS PELA SHOPEE
-// ===============================
+
+/**
+ * ===============================
+ * 6. Metadados exigidos pela Shopee
+ * ===============================
+ */
 
 $fileSize = filesize($outputFile);
 $fileMd5  = md5_file($outputFile);
 
-// ===============================
-// DIVIDIR O VÍDEO EM PARTES DE 4MB
-// ===============================
+/**
+ * ===============================
+ * 7. Dividir o vídeo em partes de 4MB
+ * ===============================
+ */
 
 $chunkSize = 4 * 1024 * 1024; // 4MB
 $chunksDir = $tmpOutputDir . "/chunks_$uniqueName";
@@ -269,6 +307,25 @@ while (!feof($handle)) {
 
 fclose($handle);
 
+// ============ BUSCA DADOS NO BANCO DE DADOS ============
+
+$stmt = $conn->prepare("SELECT partner_id, partner_key, host, access_token FROM lojaur05_tagplus.apikey_shopee WHERE shop_id = ?");
+$stmt->bind_param("s", $shop_id);
+$stmt->execute();
+$stmt->bind_result($partner_id, $partner_key, $host, $access_token);
+$stmt->fetch();
+$stmt->close();
+
+$conn->close();
+
+if (!$partner_id || !$partner_key || !$host || !$access_token) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400) ;
+    echo json_encode([
+        'error' => "Nenhum partner_id ou partner_key ou host encontrado para o shop_id: $shop_id"]);
+    exit;
+}
+
 /**
  * ===============================
  * 8. Resposta final (ÚNICA)
@@ -304,17 +361,25 @@ fclose($handle);
  * ===============================
  */
 
-// ===============================
-// 1. INIT VIDEO UPLOAD
-// ===============================
+//1. Init Video Upload
 
-// Retorna tokens da Shopee
-$tokens = getShopeeTokensByShopId($shop_id);
+// =================== RECUPERA ACCESS TOKEN ===================
+$tokens = require BASE_PATH . '/apis/shopee/auth/v2/read_tokens.php';
 
 $access_token = $tokens['access_token'];
 $partner_id   = $tokens['partner_id'];
 $partner_key  = $tokens['partner_key'];
 $host         = $tokens['host'];
+
+// =================== VALIDA RETORNO ===================
+if (!isset($access_token)) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Access token não encontrado para o shop_id: ' . $shop_id
+    ]);
+    exit;
+}
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
 $api_path = "/api/v2/media_space/init_video_upload";
@@ -355,17 +420,24 @@ if (!$videoUploadId) {
     exit;
 }
 
-// ===============================
-// 2. UPLOAD VIDEO PART
-// ===============================
-
-// Retorna tokens da Shopee
-$tokens = getShopeeTokensByShopId($shop_id);
+//2. Upload Video Part
+// =================== RECUPERA ACCESS TOKEN ===================
+$tokens = require BASE_PATH . '/apis/shopee/auth/v2/read_tokens.php';
 
 $access_token = $tokens['access_token'];
 $partner_id   = $tokens['partner_id'];
 $partner_key  = $tokens['partner_key'];
 $host         = $tokens['host'];
+
+// =================== VALIDA RETORNO ===================
+if (!isset($access_token)) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Access token não encontrado para o shop_id: ' . $shop_id
+    ]);
+    exit;
+}
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
 $api_path = "/api/v2/media_space/upload_video_part";
@@ -425,17 +497,24 @@ foreach ($parts as $part) {
 
 $uploadCostMs = (int) round((microtime(true) - $uploadStart) * 1000);// Finaliza cálculo do tempo de upload
 
-// ===============================
-// 3. COMPLETE VIDEO UPLOAD
-// ===============================
-
-// Retorna tokens da Shopee
-$tokens = getShopeeTokensByShopId($shop_id);
+//3. Complete Video Upload
+// =================== RECUPERA ACCESS TOKEN ===================
+$tokens = require BASE_PATH . '/apis/shopee/auth/v2/read_tokens.php';
 
 $access_token = $tokens['access_token'];
 $partner_id   = $tokens['partner_id'];
 $partner_key  = $tokens['partner_key'];
 $host         = $tokens['host'];
+
+// =================== VALIDA RETORNO ===================
+if (!isset($access_token)) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Access token não encontrado para o shop_id: ' . $shop_id
+    ]);
+    exit;
+}
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
 $api_path = "/api/v2/media_space/complete_video_upload";
@@ -467,17 +546,25 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 curl_close($ch);
 
-// ===============================
-// 4. GET VIDEO UPLOAD RESULT
-// ===============================
 
-// Retorna tokens da Shopee
-$tokens = getShopeeTokensByShopId($shop_id);
+//4. Get Video Upload Result
+// =================== RECUPERA ACCESS TOKEN ===================
+$tokens = require BASE_PATH . '/apis/shopee/auth/v2/read_tokens.php';
 
 $access_token = $tokens['access_token'];
 $partner_id   = $tokens['partner_id'];
 $partner_key  = $tokens['partner_key'];
 $host         = $tokens['host'];
+
+// =================== VALIDA RETORNO ===================
+if (!isset($access_token)) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Access token não encontrado para o shop_id: ' . $shop_id
+    ]);
+    exit;
+}
 
 // =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
 $api_path = "/api/v2/media_space/get_video_upload_result";
