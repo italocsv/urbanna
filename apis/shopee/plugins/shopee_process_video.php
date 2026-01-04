@@ -515,8 +515,12 @@ $status = $result['response']['status'] ?? null;
 
 $getVideoResp = json_decode($response, true);
 
-echo $initResp . "\n\n" . $uploadParttResp . "\n\n" . $completeUploadResp . "\n\n" . $getVideoResp;
-
+echo json_encode([
+    'init'     => $initResp,
+    'upload'   => $uploadParttResp,
+    'complete' => $completeUploadResp,
+    'result'   => $getVideoResp,
+], JSON_PRETTY_PRINT);
 
 /**
  * ===============================
