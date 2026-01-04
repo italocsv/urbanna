@@ -1,5 +1,6 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
+$apiPath = '/api/v2/media_space/init_video_upload';
 
 header('Content-Type: application/json');
 
@@ -236,12 +237,6 @@ while (!feof($handle)) {
 
 fclose($handle);
 
-/**
- * ===============================
- * Envia Video para Shopee
- * ===============================
- */
-
 // ============ BUSCA DADOS NO BANCO DE DADOS ============
 
 $stmt = $conn->prepare("SELECT partner_id, partner_key, host, access_token FROM lojaur05_tagplus.apikey_shopee WHERE shop_id = ?");
@@ -296,3 +291,237 @@ echo json_encode([
 
     'parts' => $parts
 ]);
+
+/**
+ * ===============================
+ * Envia Video para Shopee
+ * ===============================
+ */
+
+//1. Init Video Upload
+
+// =================== RECUPERA ACCESS TOKEN ===================
+$tokens = require BASE_PATH . '/apis/shopee/auth/v2/read_tokens.php';
+
+$access_token = $tokens['access_token'];
+$partner_id   = $tokens['partner_id'];
+$partner_key  = $tokens['partner_key'];
+$host         = $tokens['host'];
+
+// =================== VALIDA RETORNO ===================
+if (!isset($access_token)) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Access token não encontrado para o shop_id: ' . $shopId
+    ]);
+    exit;
+}
+
+// =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
+$apiPath = /api/v2/media_space/init_video_upload;
+$timestamp = time();
+$base_string = $partner_id . $timestamp . $access_token . $shopId;
+$sign = hash_hmac(
+    'sha256',
+    $base_string,
+    $partner_key
+);
+
+$params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&sign=" . $sign;
+$request_url = $host . $api_path . $params_url;
+
+$payload = [
+    'file_size' => $fileSize,
+    'file_md5'  => $fileMd5,
+];
+
+$ch = curl_init($requestUrl);
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode($payload),
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 120,
+    CURLOPT_HTTPHEADER => ['Content-Type: application/json']
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+$initResp = json_decode($response, true);
+
+$videoUploadId = $initResp['response']['video_upload_id'] ?? null;
+
+if (!$videoUploadId) {
+    echo json_encode(['error' => 'Falha no init_video_upload', 'shopee' => $initResp]);
+    exit;
+}
+
+//2. Upload Video Part
+// =================== RECUPERA ACCESS TOKEN ===================
+$tokens = require BASE_PATH . '/apis/shopee/auth/v2/read_tokens.php';
+
+$access_token = $tokens['access_token'];
+$partner_id   = $tokens['partner_id'];
+$partner_key  = $tokens['partner_key'];
+$host         = $tokens['host'];
+
+// =================== VALIDA RETORNO ===================
+if (!isset($access_token)) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Access token não encontrado para o shop_id: ' . $shopId
+    ]);
+    exit;
+}
+
+// =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
+$apiPath = /api/v2/media_space/upload_video_part;
+$timestamp = time();
+$uploadStart = microtime(true); // Inicia cálculo do tempo de upload
+
+foreach ($parts as $part) {
+    
+    $timestamp = time();
+    $baseString = $partner_id . $apiPath . $timestamp . $partner_key;
+    $sign = hash_hmac(
+        'sha256', $baseString, $partner_key
+    );
+
+    $params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&sign=" . $sign;
+    $requestUrl = $host . $apiPath . $params_url;
+
+    $binary = file_get_contents($chunksDir . '/' . $part['file']);
+
+    $payload = [
+        'video_upload_id' => $videoUploadId,
+        'part_seq'        => $part['part_seq'],
+        'part_content'    => base64_encode($binary)
+    ];
+
+    $ch = curl_init($requestUrl);
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 120,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json']
+    ]);
+
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $decoded = json_decode($response, true);
+
+    if (!empty($decoded['error'])) {
+        echo json_encode([
+            'error' => 'Erro no upload_video_part',
+            'part'  => $part['part_seq'],
+            'shopee'=> $decoded
+        ]);
+        exit;
+    }
+}
+
+$uploadCostMs = (int) round((microtime(true) - $uploadStart) * 1000);// Finaliza cálculo do tempo de upload
+
+//3. Complete Video Upload
+// =================== RECUPERA ACCESS TOKEN ===================
+$tokens = require BASE_PATH . '/apis/shopee/auth/v2/read_tokens.php';
+
+$access_token = $tokens['access_token'];
+$partner_id   = $tokens['partner_id'];
+$partner_key  = $tokens['partner_key'];
+$host         = $tokens['host'];
+
+// =================== VALIDA RETORNO ===================
+if (!isset($access_token)) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Access token não encontrado para o shop_id: ' . $shopId
+    ]);
+    exit;
+}
+
+// =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
+$apiPath = /api/v2/media_space/complete_video_upload;
+$timestamp = time();
+
+$baseString = $partner_id . $apiPath . $timestamp . $partner_key;
+$sign = hash_hmac('sha256', $baseString, $partner_key);
+
+$params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&sign=" . $sign;
+$requestUrl = $host . $apiPath . $params_url;
+
+$payload = [
+    'video_upload_id' => $videoUploadId,
+    'part_seq_list'   => array_column($parts, 'part_seq'),
+    'report_data'     => [
+        'upload_cost' => $uploadCostMs
+    ],
+];
+
+$ch = curl_init($requestUrl);
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode($payload),
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 120,
+    CURLOPT_HTTPHEADER => ['Content-Type: application/json']
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+//4. Get Video Upload Result
+// =================== RECUPERA ACCESS TOKEN ===================
+$tokens = require BASE_PATH . '/apis/shopee/auth/v2/read_tokens.php';
+
+$access_token = $tokens['access_token'];
+$partner_id   = $tokens['partner_id'];
+$partner_key  = $tokens['partner_key'];
+$host         = $tokens['host'];
+
+// =================== VALIDA RETORNO ===================
+if (!isset($access_token)) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Access token não encontrado para o shop_id: ' . $shopId
+    ]);
+    exit;
+}
+
+// =================== DECLARA VARIÁVEIS E ENVIA REQUISIÇÃO ===================
+$apiPath = /api/v2/media_space/get_video_upload_result;
+$timestamp = time();
+
+$baseString = $partner_id . $apiPath . $timestamp . $access_token . $shopId;
+$sign = hash_hmac('sha256', $baseString, $partner_key);
+
+$params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&access_token=" . $access_token . "&shop_id=" . $shopId . "&sign=" . $sign;
+$requestUrl = $host . $apiPath . $params_url;
+
+$payload = [
+    'video_upload_id' => $videoUploadId,
+];
+
+$ch = curl_init($requestUrl);
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode($payload),
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 120,
+    CURLOPT_HTTPHEADER => ['Content-Type: application/json']
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+/**
+ * ===============================
+ * APAGAR VIDEO
+ * ===============================
+ */
