@@ -14,11 +14,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Lê JSON do body
+// Lê  e valida JSON do body
 $raw = file_get_contents('php://input');
 $data = json_decode($raw, true);
 
-// Valida JSON inválido
 if (!$data) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(400);
@@ -58,16 +57,6 @@ $access_token = $tokens['access_token'];
 $partner_id   = $tokens['partner_id'];
 $partner_key  = $tokens['partner_key'];
 $host         = $tokens['host'];
-
-// =================== VALIDA RETORNO ===================
-if (!isset($access_token)) {
-    header('Content-Type: application/json; charset=utf-8');
-    http_response_code(400);
-    echo json_encode([
-        'error' => 'Access token não encontrado para o shop_id: ' . $shopId
-    ]);
-    exit;
-}
 
 // =================== DECLARA VARIÁVEIS ===================
 $timestamp = time();
