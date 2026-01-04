@@ -271,26 +271,28 @@ $sign = hash_hmac(
  * ===============================
  */
 
-echo json_encode([
-    'status'        => 'ok',
-    'message'       => 'Vídeo processado e particionado com sucesso',
-
-    'video' => [
-        'file_name' => basename($outputFile),
-        'file_size' => $fileSize,
-        'file_md5'  => $fileMd5,
-        'duration'  => $duration
-    ],
-
-    'chunk_config' => [
-        'chunk_size_bytes' => $chunkSize,
-        'total_parts'      => count($parts)
-    ],
-
-    'part_seq_list' => array_column($parts, 'part_seq'),
-
-    'parts' => $parts
-]);
+/**
+*echo json_encode([
+*    'status'        => 'ok',
+*    'message'       => 'Vídeo processado e particionado com sucesso',
+*
+*    'video' => [
+*        'file_name' => basename($outputFile),
+*        'file_size' => $fileSize,
+*        'file_md5'  => $fileMd5,
+*        'duration'  => $duration
+*    ],
+*
+*    'chunk_config' => [
+*        'chunk_size_bytes' => $chunkSize,
+*        'total_parts'      => count($parts)
+*    ],
+*
+*    'part_seq_list' => array_column($parts, 'part_seq'),
+*
+*    'parts' => $parts
+*]);
+*/ 
 
 /**
  * ===============================
