@@ -146,10 +146,9 @@ $duration = (float) $durationRaw;
 
 if ($duration > 60) {
     echo json_encode([
-        'error'    => 'Vídeo maior que 60 segundos',
+        'error'    => 'Vídeo maior que 60 segundos :: Será cortado',
         'duration' => $duration
     ]);
-    exit;
 }
 
 /**
@@ -176,6 +175,79 @@ if (!file_exists($outputFile)) {
     ]);
     exit;
 }
+
+
+// ===============================
+// 5. Ajuste Shopee: duração + resolução + tamanho
+// ===============================
+
+$outputFile = "$tmpOutputDir/$uniqueName.mp4";
+
+// 10s~60s: se <10 repete até 10; se >60 corta
+$targetDuration = $duration;
+$ffDurArgs = '';
+
+if ($duration < 10) {
+    // repete o vídeo até fechar 10s
+    $targetDuration = 10.0;
+    // -stream_loop -1 repete infinito; -t 10 limita
+    $ffDurArgs = "-stream_loop -1 -t 10";
+} elseif ($duration > 60) {
+    // corta para 60s
+    $targetDuration = 60.0;
+    $ffDurArgs = "-t 60";
+} else {
+    $targetDuration = $duration;
+}
+
+// Tamanho alvo: use 29MB pra ficar seguro abaixo dos 30MB
+$targetBytes = 29 * 1024 * 1024;
+
+// Bitrate total alvo (bps) = (bytes * 8) / segundos
+$targetTotalBps = (int) floor(($targetBytes * 8) / max(1.0, $targetDuration));
+
+// Reserva bitrate de áudio (bps)
+$audioBps = 96000;
+
+// Bitrate de vídeo (bps)
+$videoBps = max(300000, $targetTotalBps - $audioBps);
+
+// Converte bps -> k para ffmpeg
+$videoK = (int) floor($videoBps / 1000);
+$maxrateK = (int) floor($videoK * 1.10);
+$bufsizeK = (int) floor($videoK * 2.00);
+
+// Scale: garante no máximo 1280 em qualquer lado, preservando proporção
+$vf = "scale='min(1280,iw)':'min(1280,ih)':force_original_aspect_ratio=decrease";
+
+// Comando final (1-pass). Se quiser qualidade melhor: 2-pass depois.
+$cmd = "ffmpeg -y $ffDurArgs -i " . escapeshellarg($inputFile)
+     . " -vf " . escapeshellarg($vf)
+     . " -c:v libx264 -profile:v baseline -level 3.0 -pix_fmt yuv420p"
+     . " -b:v {$videoK}k -maxrate {$maxrateK}k -bufsize {$bufsizeK}k"
+     . " -c:a aac -b:a 96k -ac 2"
+     . " -movflags +faststart "
+     . escapeshellarg($outputFile) . " 2>&1";
+
+$out = shell_exec($cmd);
+
+// valida gerou
+if (!file_exists($outputFile) || filesize($outputFile) === 0) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Falha na conversão/compactação do vídeo', 'ffmpeg' => $out]);
+    exit;
+}
+
+// valida tamanho <= 30MB
+if (filesize($outputFile) > 30 * 1024 * 1024) {
+    http_response_code(400);
+    echo json_encode([
+        'error' => 'Não consegui compactar para <=30MB ainda',
+        'size_bytes' => filesize($outputFile)
+    ]);
+    exit;
+}
+
 
 /**
  * ===============================
@@ -375,7 +447,7 @@ $uploadStart = microtime(true); // Inicia cálculo do tempo de upload
 foreach ($parts as $part) {
     
     $timestamp = time();
-    $baseString = $partner_id . $api_path . $timestamp . $partner_key;
+    $baseString = $partner_id . $api_path . $timestamp;
     $sign = hash_hmac(
         'sha256',
         $baseString,
@@ -513,7 +585,7 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 curl_close($ch);
 
-return $response;
+echo $response;
 
 /**
  * ===============================
