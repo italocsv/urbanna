@@ -443,7 +443,7 @@ $host         = $tokens['host'];
 $api_path = "/api/v2/media_space/complete_video_upload";
 $timestamp = time();
 
-$baseString = $partner_id . $api_path . $timestamp . $partner_key;
+$baseString = $partner_id . $api_path . $timestamp;
 $sign = hash_hmac('sha256', $baseString, $partner_key);
 
 $params_url = "?partner_id=" . $partner_id . "&timestamp=" . $timestamp . "&sign=" . $sign;
