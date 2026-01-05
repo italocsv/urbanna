@@ -466,8 +466,8 @@ curl_setopt_array($ch, [
     CURLOPT_HTTPHEADER => ['Content-Type: application/json']
 ]);
 
-$$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $response = curl_exec($ch);
+$$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 $completeUploadResp = [
