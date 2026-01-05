@@ -466,11 +466,12 @@ curl_setopt_array($ch, [
     CURLOPT_HTTPHEADER => ['Content-Type: application/json']
 ]);
 
+$$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $response = curl_exec($ch);
 curl_close($ch);
 
 $completeUploadResp = [
-    'status_code' => http_response_code(),
+    'status_code' => $httpCode,
     'response' => $response
 ];
 
