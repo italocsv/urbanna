@@ -469,8 +469,10 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 curl_close($ch);
 
-$completeUploadResp = json_decode($response, true);
-
+$completeUploadResp = [
+    'status_code' => http_response_code(),
+    'response' => $response
+];
 
 // ===============================
 // 4. GET VIDEO UPLOAD RESULT
