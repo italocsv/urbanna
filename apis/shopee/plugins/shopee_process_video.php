@@ -454,7 +454,7 @@ $payload = [
     'part_seq_list'   => array_column($parts, 'part_seq'),
     'report_data'     => [
         'upload_cost' => $uploadCostMs
-    ],
+    ]
 ];
 
 $ch = curl_init($request_url);
