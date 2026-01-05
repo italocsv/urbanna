@@ -457,6 +457,14 @@ $payload = [
     ]
 ];
 
+$teste = [
+    'video_upload_id' => $videoUploadId,
+    'part_seq_list'   => array_column($parts, 'part_seq'),
+    'report_data'     => [
+        'upload_cost' => $uploadCostMs
+    ]
+];
+
 $ch = curl_init($request_url);
 curl_setopt_array($ch, [
     CURLOPT_POST => true,
@@ -521,6 +529,8 @@ $getVideoResp = json_decode($response, true);
 echo json_encode([
     'init'     => $initResp,
     'upload'   => $uploadParttResp,
+    'parts'    => $parts,
+    'teste'    => $teste,
     'complete' => $completeUploadResp,
     'result'   => $getVideoResp,
 ], JSON_PRETTY_PRINT);
