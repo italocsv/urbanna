@@ -60,7 +60,7 @@ try {
 
     // 5️⃣ Enviar Requisiçaõo HTTP para Jet Transportadora
     
-    $ch = curl_init('https://demogw.jtjms-br.com/webopenplatformapi/api/order/printOrder');
+    $ch = curl_init('https://openapi.jtjms-br.com/webopenplatformapi/api/order/printOrder');
 
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
