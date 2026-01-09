@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Impressão Jet Transportadora</title>
+
+  <!-- QZ Tray -->
+  <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.5/qz-tray.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 40px;
+    }
+    .box {
+      background: #fff;
+      padding: 20px;
+      max-width: 420px;
+      margin: auto;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .status {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Imprimir Etiqueta Jet</h2>
+
+  <label for="cnpj">CNPJ</label>
+  <input type="text" id="cnpj" placeholder="23927120000134">
+
+  <label for="billCode">Bill Code</label>
+  <input type="text" id="billCode" placeholder="UAT000000109980">
+
+  <button onclick="imprimir()">Imprimir</button>
+
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const API_URL = 'https://SEU_DOMINIO/jet/print.php'; // <-- ajuste
+const PRINTER_NAME = 'NOME_EXATO_DA_IMPRESSORA';    // <-- ajuste
+
+function setStatus(msg, error = false) {
+  const el = document.getElementById('status');
+  el.innerText = msg;
+  el.style.color = error ? 'red' : 'green';
+}
+
+async function imprimir() {
+  const cnpj = document.getElementById('cnpj').value.trim();
+  const billCode = document.getElementById('billCode').value.trim();
+
+  if (!cnpj || !billCode) {
+    setStatus('Preencha CNPJ e BillCode', true);
+    return;
+  }
+
+  try {
+    setStatus('Conectando ao QZ Tray...');
+    await qz.websocket.connect();
+
+    setStatus('Consultando Jet...');
+    const resp = await fetch(
+      `${API_URL}?cnpj=${encodeURIComponent(cnpj)}&billCode=${encodeURIComponent(billCode)}`
+    );
+
+    const json = await resp.json();
+
+    if (json.codigo !== '1') {
+      throw new Error(json.mensagem || 'Erro na resposta da Jet');
+    }
+
+    const base64Pdf = json.dados.content.replace(/\s/g, '');
+
+    setStatus('Enviando para impressão...');
+    const config = qz.configs.create(PRINTER_NAME);
+
+    const data = [{
+      type: 'pdf',
+      format: 'base64',
+      data: base64Pdf
+    }];
+
+    await qz.print(config, data);
+
+    setStatus('Impressão enviada com sucesso!');
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message || 'Erro ao imprimir', true);
+  }
+}
+</script>
+
+</body>
+</html>
