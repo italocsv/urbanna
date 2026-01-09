@@ -90,6 +90,8 @@ async function imprimir() {
     );
 
     const json = await resp.json();
+    console.log('Resposta bruta:', text);
+
 
     if (json.codigo !== '1') {
       throw new Error(json.mensagem || 'Erro na resposta da Jet');

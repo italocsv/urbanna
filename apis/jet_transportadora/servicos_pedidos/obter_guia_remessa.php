@@ -1,4 +1,7 @@
 <?php
+require $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
+require BASE_PATH . '/apis/jet_transportadora/auth/read_tokens.php';
+
 // ================================
 // RECUPERA CNPJ E BILLCODE
 // ================================
