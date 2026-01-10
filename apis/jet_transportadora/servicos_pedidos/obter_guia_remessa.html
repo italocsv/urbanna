@@ -51,7 +51,7 @@
   <h2>Imprimir Etiqueta Jet</h2>
 
   <label for="cnpj">CNPJ</label>
-  <input type="text" id="cnpj" placeholder="23927120000134">
+  <input type="text" id="cnpj" placeholder="23927120000134" value="23927120000134">
 
   <label for="billCode">Bill Code</label>
   <input type="text" id="billCode" placeholder="UAT000000109980">
@@ -84,20 +84,20 @@ async function imprimir() {
     setStatus('Conectando ao QZ Tray...');
     await qz.websocket.connect();
 
-    setStatus('Consultando Jet...');
+    setStatus('Consultando J&T Express...');
+
     const resp = await fetch(
-      `${API_URL}?cnpj=${encodeURIComponent(cnpj)}&billCode=${encodeURIComponent(billCode)}`
+    `${API_URL}?cnpj=${encodeURIComponent(cnpj)}&billCode=${encodeURIComponent(billCode)}`
     );
 
     const json = await resp.json();
-    console.log('Resposta bruta:', text);
+    console.log('Resposta JSON:', json);
 
-
-    if (json.codigo !== '1') {
-      throw new Error(json.mensagem || 'Erro na resposta da Jet');
+    if (json.code !== '1') {
+    throw new Error(json.msg || 'Erro na resposta da Jet');
     }
-
-    const base64Pdf = json.dados.content.replace(/\s/g, '');
+    
+    const base64Pdf = json.data.base64EncodeContent.replace(/\s/g, '');
 
     setStatus('Enviando para impressão...');
     const config = qz.configs.create(PRINTER_NAME);
