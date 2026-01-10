@@ -154,7 +154,22 @@ async function imprimir() {
   }
 }
 
+// Listener do teclado Enter para imprimir
+document.getElementById('billCode').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    imprimir();
+  }
+});
+
+// Carrega impressoras ao iniciar
 window.addEventListener('load', carregarImpressoras);
+
+// Coloca cursor no billCode ao carregar
+window.addEventListener('load', () => {
+  carregarImpressoras();
+  document.getElementById('billCode').focus();
+});
 </script>
 
 </body>
