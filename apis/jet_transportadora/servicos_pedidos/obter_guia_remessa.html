@@ -102,7 +102,7 @@ qz.security.setCertificatePromise(() => {
 
 // 🔏 Diz ao QZ COMO assinar (chama seu backend)
 qz.security.setSignaturePromise((toSign) => {
-  return fetch('/apis/jet_transportadora/servicos_pedidos/sign-qz.php', {
+  return fetch('http://app.148.230.72.178.sslip.io/apis/jet_transportadora/servicos_pedidos/sign-qz.php', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
