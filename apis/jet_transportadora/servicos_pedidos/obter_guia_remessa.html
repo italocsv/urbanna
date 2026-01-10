@@ -67,17 +67,19 @@
 </div>
 
 <script>
-const API_URL = 'http://app.148.230.72.178.sslip.io/apis/jet_transportadora/servicos_pedidos/obter_guia_remessa.php'; // <-- ajuste
-//const PRINTER_NAME = 'Microsoft Print to PDF';    // <-- ajuste
+const API_URL = 'http://app.148.230.72.178.sslip.io/apis/jet_transportadora/servicos_pedidos/obter_guia_remessa.php';
+
+async function conectarQZ() {
+  if (!qz.websocket.isActive()) {
+    await qz.websocket.connect();
+  }
+}
 
 async function carregarImpressoras() {
   try {
-    if (!qz.websocket.isActive()) {
-      await qz.websocket.connect();
-    }
+    await conectarQZ();
 
     const printers = await qz.printers.find();
-
     const select = document.getElementById('printer');
     select.innerHTML = '';
 
@@ -87,13 +89,11 @@ async function carregarImpressoras() {
       option.textContent = printer;
       select.appendChild(option);
     });
-
   } catch (err) {
     console.error(err);
     setStatus('Erro ao listar impressoras', true);
   }
 }
-
 
 function setStatus(msg, error = false) {
   const el = document.getElementById('status');
@@ -107,52 +107,54 @@ async function imprimir() {
   const printerName = document.getElementById('printer').value;
 
   if (!printerName) {
-  throw new Error('Selecione uma impressora');
-}
+    setStatus('Selecione uma impressora', true);
+    return;
+  }
 
   if (!cnpj || !billCode) {
     setStatus('Preencha CNPJ e BillCode', true);
     return;
   }
 
-  try {
-    setStatus('Conectando ao QZ Tray...');
-    if (!qz.websocket.isActive()) {
-      await qz.websocket.connect();
-    }
+  const btn = document.querySelector('button');
+  btn.disabled = true;
 
+  try {
+    await conectarQZ();
     setStatus('Consultando J&T Express...');
 
     const resp = await fetch(
-    `${API_URL}?cnpj=${encodeURIComponent(cnpj)}&billCode=${encodeURIComponent(billCode)}`
+      `${API_URL}?cnpj=${encodeURIComponent(cnpj)}&billCode=${encodeURIComponent(billCode)}`
     );
 
     const json = await resp.json();
     console.log('Resposta JSON:', json);
 
     if (json.code !== '1') {
-    throw new Error(json.msg || 'Erro na resposta da Jet');
+      throw new Error(json.msg || 'Erro na resposta da Jet');
     }
-    
+
     const base64Pdf = json.data.base64EncodeContent.replace(/\s/g, '');
 
     setStatus('Enviando para impressão...');
     const config = qz.configs.create(printerName);
 
-    const data = [{
+    await qz.print(config, [{
       type: 'pdf',
       format: 'base64',
       data: base64Pdf
-    }];
-
-    await qz.print(config, data);
+    }]);
 
     setStatus('Impressão enviada com sucesso!');
   } catch (err) {
     console.error(err);
     setStatus(err.message || 'Erro ao imprimir', true);
+  } finally {
+    btn.disabled = false;
   }
 }
+
+window.addEventListener('load', carregarImpressoras);
 </script>
 
 </body>
