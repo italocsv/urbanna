@@ -101,17 +101,15 @@ qz.security.setCertificatePromise(() => {
 });
 
 // 🔏 Diz ao QZ COMO assinar (chama seu backend)
-qz.security.setSignaturePromise((toSign) => {
-  return fetch('http://app.148.230.72.178.sslip.io/apis/jet_transportadora/servicos_pedidos/sign-qz.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      data: toSign
-    })
-  })
-  .then(res => res.text());
+qz.security.setSignaturePromise(function (toSign) {
+    return fetch(
+        'http://app.148.230.72.178.sslip.io/apis/jet_transportadora/servicos_pedidos/sign-qz.php',
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: toSign })
+        }
+    ).then(res => res.text());
 });
 
 async function conectarQZ() {
