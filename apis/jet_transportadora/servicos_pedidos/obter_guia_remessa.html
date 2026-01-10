@@ -50,6 +50,11 @@
 <div class="box">
   <h2>Imprimir Etiqueta Jet</h2>
 
+  <label for="printer">Impressora</label>
+  <select id="printer">
+    <option value="">Carregando impressoras...</option>
+  </select>
+
   <label for="cnpj">CNPJ</label>
   <input type="text" id="cnpj" placeholder="23927120000134" value="23927120000134">
 
@@ -63,7 +68,32 @@
 
 <script>
 const API_URL = 'http://app.148.230.72.178.sslip.io/apis/jet_transportadora/servicos_pedidos/obter_guia_remessa.php'; // <-- ajuste
-const PRINTER_NAME = 'Microsoft Print to PDF';    // <-- ajuste
+//const PRINTER_NAME = 'Microsoft Print to PDF';    // <-- ajuste
+
+async function carregarImpressoras() {
+  try {
+    if (!qz.websocket.isActive()) {
+      await qz.websocket.connect();
+    }
+
+    const printers = await qz.printers.find();
+
+    const select = document.getElementById('printer');
+    select.innerHTML = '';
+
+    printers.forEach(printer => {
+      const option = document.createElement('option');
+      option.value = printer;
+      option.textContent = printer;
+      select.appendChild(option);
+    });
+
+  } catch (err) {
+    console.error(err);
+    setStatus('Erro ao listar impressoras', true);
+  }
+}
+
 
 function setStatus(msg, error = false) {
   const el = document.getElementById('status');
@@ -74,6 +104,11 @@ function setStatus(msg, error = false) {
 async function imprimir() {
   const cnpj = document.getElementById('cnpj').value.trim();
   const billCode = document.getElementById('billCode').value.trim();
+  const printerName = document.getElementById('printer').value;
+
+  if (!printerName) {
+  throw new Error('Selecione uma impressora');
+}
 
   if (!cnpj || !billCode) {
     setStatus('Preencha CNPJ e BillCode', true);
@@ -82,7 +117,9 @@ async function imprimir() {
 
   try {
     setStatus('Conectando ao QZ Tray...');
-    await qz.websocket.connect();
+    if (!qz.websocket.isActive()) {
+      await qz.websocket.connect();
+    }
 
     setStatus('Consultando J&T Express...');
 
@@ -100,7 +137,7 @@ async function imprimir() {
     const base64Pdf = json.data.base64EncodeContent.replace(/\s/g, '');
 
     setStatus('Enviando para impressão...');
-    const config = qz.configs.create(PRINTER_NAME);
+    const config = qz.configs.create(printerName);
 
     const data = [{
       type: 'pdf',
