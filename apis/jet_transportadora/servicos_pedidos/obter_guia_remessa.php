@@ -33,7 +33,8 @@ try {
     // Gerar body digest
     $bodyDigest = gerarBodyDigest(
         $customer_code,
-        $private_key
+        $private_key,
+        $password
     );
 
     // 4️⃣ Montar payload (array)
@@ -100,15 +101,16 @@ try {
 
 function gerarBodyDigest(
     string $customerCode,
-    string $privateKey
+    string $privateKey,
+    string $password
 ): string {
 
     // equivalente a: MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("ROWjzgY7jadada236t2"))
-    $md5ConstanteHex = strtoupper(md5('ROWjzgY7jadada236t2'));
+    $md5Password = strtoupper(md5($password .'jadada236t2'));
 
     // concatenação:
     // customer_code + md5ConstanteHex + private_key
-    $stringFinal = $customerCode . $md5ConstanteHex . $privateKey;
+    $stringFinal = $customerCode . $md5Password . $privateKey;
 
     // MD5 binário (true = raw output)
     $md5Binario = md5($stringFinal, true);
