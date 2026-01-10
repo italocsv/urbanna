@@ -68,6 +68,49 @@
 
 <script>
 const API_URL = 'http://app.148.230.72.178.sslip.io/apis/jet_transportadora/servicos_pedidos/obter_guia_remessa.php';
+const CERTIFICATE = `
+-----BEGIN CERTIFICATE-----
+MIIECzCCAvOgAwIBAgIGAZuo2CryMA0GCSqGSIb3DQEBCwUAMIGiMQswCQYDVQQG
+EwJVUzELMAkGA1UECAwCTlkxEjAQBgNVBAcMCUNhbmFzdG90YTEbMBkGA1UECgwS
+UVogSW5kdXN0cmllcywgTExDMRswGQYDVQQLDBJRWiBJbmR1c3RyaWVzLCBMTEMx
+HDAaBgkqhkiG9w0BCQEWDXN1cHBvcnRAcXouaW8xGjAYBgNVBAMMEVFaIFRyYXkg
+RGVtbyBDZXJ0MB4XDTI2MDEwOTE2NTgxN1oXDTQ2MDEwOTE2NTgxN1owgaIxCzAJ
+BgNVBAYTAlVTMQswCQYDVQQIDAJOWTESMBAGA1UEBwwJQ2FuYXN0b3RhMRswGQYD
+VQQKDBJRWiBJbmR1c3RyaWVzLCBMTEMxGzAZBgNVBAsMElFaIEluZHVzdHJpZXMs
+IExMQzEcMBoGCSqGSIb3DQEJARYNc3VwcG9ydEBxei5pbzEaMBgGA1UEAwwRUVog
+VHJheSBEZW1vIENlcnQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC0
+8WPZgWkGRGckYvSn1BE6LCvKc4uCFiQfRfm6wK4hiP/RItGZ8/sb48Pwr6TuhpDO
+ls0Z4DvPVVyquRT/DSuxxnRiD6lONbIij2R6CkfYFUfKX1Dsda6pqROxvkZicHTW
+Y11OcoSBIfrXUU0wWO6toyjfqomyY1gvj4vKSCMLIkV7SqDSHX35PSXblEUs9wJ+
+LfNE4DkR9+01EVhaazLgvQrlRAKIYKEdUTNMCIoRALvI+FME8U2oWsVqIFvAZKtf
+BMTrYbqXAVdwkVxVoJt2guBoN85uXRLhWNQzJU/z/lk5Nk50a3SANOL2u+XxbqTZ
+dF8AT01ToupYK6ei57+LAgMBAAGjRTBDMBIGA1UdEwEB/wQIMAYBAf8CAQEwDgYD
+VR0PAQH/BAQDAgEGMB0GA1UdDgQWBBR2dSu/7YhFHkZcscPtTn/9QEn5tjANBgkq
+hkiG9w0BAQsFAAOCAQEAGs2x7e2dQLFaMFkoeULDtMPrzC+oUFsSuTmytvxYJLVu
+YwQenGtTP67gS+dkivFgRCt7SVvrL/auc1Rmgs3fIOToQHMztxjp9OgRjYQwXK/n
+96fvDUR91n3Mg239WvsR05RSyfApJCMjS+54lrbrdGCNFipMgMbjRL2zgZKuERy9
+oPQEaISn4hoXpY9+7l11+px+lD5bKn2q24lwFZBgg1EQ1J+TEWwQt0hh0KnfsoXI
+Kbv7l3o73uei6kfNwiOP0BkF1IeWL3YhNEDoLj+tS5KrdqunwQHN3a0xlt7unULb
+jeGCHapVrFAUoDYSI4V+Jsas04LmaH1xWau9Ll39bQ==
+-----END CERTIFICATE-----
+`;
+
+// 🔐 Diz ao QZ qual é o certificado do site
+qz.security.setCertificatePromise(() => {
+  return Promise.resolve(CERTIFICATE);
+});
+
+// 🔏 Diz ao QZ COMO assinar (chama seu backend)
+qz.security.setSignaturePromise(function (toSign) {
+    return fetch(
+        'http://app.148.230.72.178.sslip.io/apis/jet_transportadora/servicos_pedidos/sign-qz.php',
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: toSign })
+        }
+    ).then(res => res.text());
+});
 
 async function conectarQZ() {
   if (!qz.websocket.isActive()) {
