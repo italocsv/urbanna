@@ -104,6 +104,7 @@ function setStatus(msg, error = false) {
 async function imprimir() {
   const cnpj = document.getElementById('cnpj').value.trim();
   const billCode = document.getElementById('billCode').value.trim();
+  const billCodeAtual = billCode;
   const printerName = document.getElementById('printer').value;
 
   if (!printerName) {
@@ -145,7 +146,9 @@ async function imprimir() {
       data: base64Pdf
     }]);
 
-    setStatus('Impressão enviada com sucesso!');
+    setStatus('Impressão enviada com sucesso!\nRemessa: ' + billCodeAtual);
+    document.getElementById('billCode').value = '';
+    document.getElementById('billCode').focus();
   } catch (err) {
     console.error(err);
     setStatus(err.message || 'Erro ao imprimir', true);
@@ -161,9 +164,6 @@ document.getElementById('billCode').addEventListener('keydown', (e) => {
     imprimir();
   }
 });
-
-// Carrega impressoras ao iniciar
-window.addEventListener('load', carregarImpressoras);
 
 // Coloca cursor no billCode ao carregar
 window.addEventListener('load', () => {
