@@ -142,6 +142,8 @@ async function imprimir() {
     document.getElementById('billCode').value = '';
     document.getElementById('billCode').focus();
     setStatus('Pronto para próxima remessa');
+    // tenta focar agora
+    setTimeout(voltarFoco, 100);
 
     iframe.onload = () => {
       // pequena pausa para garantir foco
@@ -186,6 +188,14 @@ document.getElementById('billCode').addEventListener('keydown', (e) => {
     imprimir();
   }
 });
+
+function voltarFoco() {
+  const input = document.getElementById('billCode');
+  input.focus();
+  input.select(); // opcional, ajuda com scanner
+}
+
+
 </script>
 
 </body>
