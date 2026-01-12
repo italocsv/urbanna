@@ -59,49 +59,33 @@
 </div>
 
 <script>
-/**
- * ESTADO GLOBAL
- */
 let printIframe = null;
 let printUrl = null;
-let printing = false;
 
 const API_URL = 'http://app.148.230.72.178.sslip.io/apis/jet_transportadora/servicos_pedidos/obter_guia_remessa.php';
 
-/**
- * STATUS
- */
 function setStatus(msg, error = false) {
   const el = document.getElementById('status');
   el.innerText = msg;
   el.style.color = error ? 'red' : 'green';
 }
 
-/**
- * BASE64 -> BLOB
- */
 function base64ToBlob(base64, mime) {
   const byteChars = atob(base64);
   const byteNumbers = new Array(byteChars.length);
   for (let i = 0; i < byteChars.length; i++) {
     byteNumbers[i] = byteChars.charCodeAt(i);
   }
-  return new Blob([new Uint8Array(byteNumbers)], { type: mime });
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: mime });
 }
 
-/**
- * IMPRIMIR
- */
 async function imprimir() {
-  if (printing) return;
-  printing = true;
-
   const cnpj = document.getElementById('cnpj').value.trim();
   const billCode = document.getElementById('billCode').value.trim();
 
   if (!cnpj || !billCode) {
     setStatus('Preencha CNPJ e BillCode', true);
-    printing = false;
     return;
   }
 
@@ -121,72 +105,76 @@ async function imprimir() {
       throw new Error(json.msg || 'Erro na resposta da Jet');
     }
 
-    // gera PDF
     const base64Pdf = json.data.base64EncodeContent.replace(/\s/g, '');
     const blob = base64ToBlob(base64Pdf, 'application/pdf');
     const url = URL.createObjectURL(blob);
 
-    // cria iframe
+    setStatus('Abrindo Impressão...');
+
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     iframe.src = url;
+
     document.body.appendChild(iframe);
 
     printIframe = iframe;
     printUrl = url;
 
-    /**
-     * 🔥 AQUI ESTÁ O SEGREDO 🔥
-     * prepara o próximo ciclo ANTES do print
-     */
-    document.getElementById('billCode').value = '';
-    document.getElementById('billCode').focus();
-    setStatus('Pronto para próxima remessa');
-
     iframe.onload = () => {
-      // pequena pausa para garantir foco
-      setTimeout(() => {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-
-        // limpeza de memória (não mexe mais em foco)
-        setTimeout(() => {
-          if (printIframe) {
-            URL.revokeObjectURL(printUrl);
-            document.body.removeChild(printIframe);
-            printIframe = null;
-            printUrl = null;
-          }
-        }, 2000);
-      }, 100);
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
     };
+
 
   } catch (err) {
     console.error(err);
     setStatus(err.message || 'Erro ao imprimir', true);
   } finally {
     btn.disabled = false;
-    printing = false;
   }
 }
 
-/**
- * FOCO AUTOMÁTICO AO CARREGAR
- */
+// Cursosr focus no campo BillCode ao carregar a página
 window.addEventListener('load', () => {
   document.getElementById('billCode').focus();
 });
 
-/**
- * ENTER IMPRIME
- */
 document.getElementById('billCode').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault();
     imprimir();
   }
 });
-</script>
 
+
+
+// Função para finalizar impressão e limpar iframe
+function finalizarPrint() {
+  if (!printIframe) return;
+
+  document.getElementById('billCode').value = '';
+  document.getElementById('billCode').focus();
+
+  URL.revokeObjectURL(printUrl);
+  document.body.removeChild(printIframe);
+
+  printIframe = null;
+  printUrl = null;
+
+  setStatus('Pronto para próxima remessa');
+}
+
+// Gatilho 1: quando o browser disparar afterprint
+window.addEventListener('afterprint', finalizarPrint);
+
+// Gatilho 2 (fallback): quando o diálogo fecha e a aba volta a ficar visível
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    setTimeout(finalizarPrint, 100);
+  }
+});
+
+
+</script>
 </body>
 </html>
