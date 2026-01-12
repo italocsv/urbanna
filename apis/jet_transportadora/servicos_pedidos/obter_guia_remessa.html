@@ -146,16 +146,31 @@ document.getElementById('billCode').addEventListener('keydown', (e) => {
   }
 });
 
-window.addEventListener('afterprint', () => {
-  if (printIframe) {
-    document.getElementById('billCode').value = '';
-    document.getElementById('billCode').focus();
 
-    URL.revokeObjectURL(printUrl);
-    document.body.removeChild(printIframe);
 
-    printIframe = null;
-    printUrl = null;
+// Função para finalizar impressão e limpar iframe
+function finalizarPrint() {
+  if (!printIframe) return;
+
+  document.getElementById('billCode').value = '';
+  document.getElementById('billCode').focus();
+
+  URL.revokeObjectURL(printUrl);
+  document.body.removeChild(printIframe);
+
+  printIframe = null;
+  printUrl = null;
+
+  setStatus('Pronto para próxima remessa');
+}
+
+// Gatilho 1: quando o browser disparar afterprint
+window.addEventListener('afterprint', finalizarPrint);
+
+// Gatilho 2 (fallback): quando o diálogo fecha e a aba volta a ficar visível
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    setTimeout(finalizarPrint, 100);
   }
 });
 
