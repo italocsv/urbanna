@@ -115,17 +115,18 @@ async function imprimir() {
     document.body.appendChild(iframe);
 
     iframe.onload = () => {
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
+      const win = iframe.contentWindow;
 
-    setTimeout(() => {
+    win.focus();
+    win.print();
+
+    win.onafterprint = () => {
       document.getElementById('billCode').value = '';
       document.getElementById('billCode').focus();
       URL.revokeObjectURL(url);
-    document.body.removeChild(iframe);
-    }, 300);
+      document.body.removeChild(iframe);
+    };
   };
-
   } catch (err) {
     console.error(err);
     setStatus(err.message || 'Erro ao imprimir', true);
