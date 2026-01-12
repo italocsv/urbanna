@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Impressão Jet Transportadora</title>
+  <title>Impressï¿½o Jet Transportadora</title>
 
   <!-- QZ Tray -->
   <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.5/qz-tray.js"></script>
@@ -50,11 +50,6 @@
 <div class="box">
   <h2>Imprimir Etiqueta Jet</h2>
 
-  <label for="printer">Impressora</label>
-  <select id="printer">
-    <option value="">Carregando impressoras...</option>
-  </select>
-
   <label for="cnpj">CNPJ</label>
   <input type="text" id="cnpj" placeholder="23927120000134" value="23927120000134">
 
@@ -69,48 +64,25 @@
 <script>
 const API_URL = 'http://app.148.230.72.178.sslip.io/apis/jet_transportadora/servicos_pedidos/obter_guia_remessa.php';
 
-async function conectarQZ() {
-  if (!qz.websocket.isActive()) {
-    await qz.websocket.connect();
-  }
-}
-
-async function carregarImpressoras() {
-  try {
-    await conectarQZ();
-
-    const printers = await qz.printers.find();
-    const select = document.getElementById('printer');
-    select.innerHTML = '';
-
-    printers.forEach(printer => {
-      const option = document.createElement('option');
-      option.value = printer;
-      option.textContent = printer;
-      select.appendChild(option);
-    });
-  } catch (err) {
-    console.error(err);
-    setStatus('Erro ao listar impressoras', true);
-  }
-}
-
 function setStatus(msg, error = false) {
   const el = document.getElementById('status');
   el.innerText = msg;
   el.style.color = error ? 'red' : 'green';
 }
 
+function base64ToBlob(base64, mime) {
+  const byteChars = atob(base64);
+  const byteNumbers = new Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) {
+    byteNumbers[i] = byteChars.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: mime });
+}
+
 async function imprimir() {
   const cnpj = document.getElementById('cnpj').value.trim();
   const billCode = document.getElementById('billCode').value.trim();
-  const billCodeAtual = billCode;
-  const printerName = document.getElementById('printer').value;
-
-  if (!printerName) {
-    setStatus('Selecione uma impressora', true);
-    return;
-  }
 
   if (!cnpj || !billCode) {
     setStatus('Preencha CNPJ e BillCode', true);
@@ -121,7 +93,6 @@ async function imprimir() {
   btn.disabled = true;
 
   try {
-    await conectarQZ();
     setStatus('Consultando J&T Express...');
 
     const resp = await fetch(
@@ -129,26 +100,31 @@ async function imprimir() {
     );
 
     const json = await resp.json();
-    console.log('Resposta JSON:', json);
 
     if (json.code !== '1') {
       throw new Error(json.msg || 'Erro na resposta da Jet');
     }
 
     const base64Pdf = json.data.base64EncodeContent.replace(/\s/g, '');
+    const blob = base64ToBlob(base64Pdf, 'application/pdf');
+    const url = URL.createObjectURL(blob);
 
-    setStatus('Enviando para impressão...');
-    const config = qz.configs.create(printerName);
+    setStatus('Abrindo impressÃ£o...');
 
-    await qz.print(config, [{
-      type: 'pdf',
-      format: 'base64',
-      data: base64Pdf
-    }]);
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
 
-    setStatus('Impressão enviada com sucesso!\nRemessa: ' + billCodeAtual);
+    document.body.appendChild(iframe);
+
+    iframe.onload = () => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    };
+
     document.getElementById('billCode').value = '';
     document.getElementById('billCode').focus();
+
   } catch (err) {
     console.error(err);
     setStatus(err.message || 'Erro ao imprimir', true);
@@ -156,21 +132,6 @@ async function imprimir() {
     btn.disabled = false;
   }
 }
-
-// Listener do teclado Enter para imprimir
-document.getElementById('billCode').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    imprimir();
-  }
-});
-
-// Coloca cursor no billCode ao carregar
-window.addEventListener('load', () => {
-  carregarImpressoras();
-  document.getElementById('billCode').focus();
-});
 </script>
-
 </body>
 </html>
