@@ -59,6 +59,9 @@
 </div>
 
 <script>
+let printIframe = null;
+let printUrl = null;
+
 const API_URL = 'http://app.148.230.72.178.sslip.io/apis/jet_transportadora/servicos_pedidos/obter_guia_remessa.php';
 
 function setStatus(msg, error = false) {
@@ -106,7 +109,7 @@ async function imprimir() {
     const blob = base64ToBlob(base64Pdf, 'application/pdf');
     const url = URL.createObjectURL(blob);
 
-    setStatus('Abrindo impressÃ£o...');
+    setStatus('Abrindo Impressão...');
 
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
@@ -114,19 +117,15 @@ async function imprimir() {
 
     document.body.appendChild(iframe);
 
+    printIframe = iframe;
+    printUrl = url;
+
     iframe.onload = () => {
-      const win = iframe.contentWindow;
-
-    win.focus();
-    win.print();
-
-    win.onafterprint = () => {
-      document.getElementById('billCode').value = '';
-      document.getElementById('billCode').focus();
-      URL.revokeObjectURL(url);
-      document.body.removeChild(iframe);
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
     };
-  };
+
+
   } catch (err) {
     console.error(err);
     setStatus(err.message || 'Erro ao imprimir', true);
@@ -146,6 +145,20 @@ document.getElementById('billCode').addEventListener('keydown', (e) => {
     imprimir();
   }
 });
+
+window.addEventListener('afterprint', () => {
+  if (printIframe) {
+    document.getElementById('billCode').value = '';
+    document.getElementById('billCode').focus();
+
+    URL.revokeObjectURL(printUrl);
+    document.body.removeChild(printIframe);
+
+    printIframe = null;
+    printUrl = null;
+  }
+});
+
 
 </script>
 </body>
