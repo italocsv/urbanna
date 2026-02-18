@@ -5,6 +5,7 @@ header('Content-Type: application/json');
 $maxWidth = 1200;
 $tempDir  = __DIR__ . '/temp/';
 $saveDir  = __DIR__ . '/converted/';
+$publicBaseUrl = 'https://SEUDOMINIO.com/converted/'; // ALTERAR AQUI
 
 // ===== LÊ BODY =====
 $input = json_decode(file_get_contents('php://input'), true);
@@ -27,36 +28,80 @@ if (!$url) {
 if (!is_dir($tempDir)) mkdir($tempDir, 0755, true);
 if (!is_dir($saveDir)) mkdir($saveDir, 0755, true);
 
-// ===== BAIXA IMAGEM =====
-$ext = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
-$inputFile  = $tempDir . uniqid('in_') . '.' . $ext;
-$outputFile = $saveDir . uniqid('img_') . '.jpg';
+// ===== NOME BASEADO EM HASH (evita duplicar) =====
+$hash = md5($url);
+$outputFile = $saveDir . $hash . '.jpg';
+$publicUrl  = $publicBaseUrl . $hash . '.jpg';
 
-$imageData = @file_get_contents($url);
-
-if (!$imageData) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Erro ao baixar imagem']);
+// Se já existe, não reconverte
+if (file_exists($outputFile)) {
+    echo json_encode([
+        'success' => true,
+        'cached'  => true,
+        'url'     => $publicUrl
+    ]);
     exit;
 }
 
+// ===== BAIXA IMAGEM VIA CURL =====
+$ch = curl_init($url);
+
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    CURLOPT_SSL_VERIFYPEER => true,
+    CURLOPT_TIMEOUT        => 30
+]);
+
+$imageData = curl_exec($ch);
+$httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$mime      = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+curl_close($ch);
+
+$size = strlen($imageData);
+
+// ===== VALIDAÇÃO FORTE =====
+if (
+    $httpCode !== 200 ||
+    !$imageData ||
+    strpos($mime, 'image') === false ||
+    $size < 1000
+) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error'   => 'Arquivo inválido',
+        'http'    => $httpCode,
+        'mime'    => $mime,
+        'size'    => $size
+    ]);
+    exit;
+}
+
+// ===== SALVA TEMP =====
+$inputFile = $tempDir . $hash . '.tmp';
 file_put_contents($inputFile, $imageData);
 
 // ===== CONVERSÃO FFMPEG =====
-$cmd = "ffmpeg -y -i \"$inputFile\" -vf \"scale='min($maxWidth,iw)':-2\" -q:v 2 \"$outputFile\" 2>&1";
+$cmd = "ffmpeg -y -i \"$inputFile\" -vf \"scale='min($maxWidth,iw)':-2\" -q:v 3 \"$outputFile\" 2>&1";
 exec($cmd, $output, $returnCode);
 
 unlink($inputFile);
 
 if ($returnCode !== 0 || !file_exists($outputFile)) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Erro na conversão', 'ffmpeg' => $output]);
+    echo json_encode([
+        'success' => false,
+        'error'   => 'Erro na conversão',
+        'ffmpeg'  => $output
+    ]);
     exit;
 }
 
-// ===== RETORNO =====
+// ===== RETORNO FINAL =====
 echo json_encode([
     'success' => true,
-    'file' => basename($outputFile),
-    'path' => $outputFile
+    'cached'  => false,
+    'url'     => $publicUrl
 ]);
