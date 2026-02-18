@@ -5,7 +5,7 @@ header('Content-Type: application/json');
 $maxWidth = 1200;
 $tempDir  = __DIR__ . '/temp/';
 $saveDir  = __DIR__ . '/converted/';
-$publicBaseUrl = 'https://app.148.230.72.178.sslip.io/apis/image/converted/';
+$publicBaseUrl = 'http://app.148.230.72.178.sslip.io/apis/image/converted/';
 
 // ===== LÊ BODY =====
 $input = json_decode(file_get_contents('php://input'), true);
