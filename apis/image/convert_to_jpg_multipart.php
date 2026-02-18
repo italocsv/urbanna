@@ -3,60 +3,81 @@ header('Content-Type: application/json');
 
 // ===== CONFIG =====
 $maxWidth = 1200;
-$tempDir  = __DIR__ . '/temp/';
 $saveDir  = __DIR__ . '/converted/';
+$publicBaseUrl = 'https://app.148.230.72.178.sslip.io/apis/image/converted/'; // AJUSTE SE PRECISAR
 
-// ===== LÊ BODY =====
-$input = json_decode(file_get_contents('php://input'), true);
-
-if (!isset($input['url'])) {
+// ===== VALIDA ENVIO =====
+if (!isset($_FILES['file'])) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'URL não enviada']);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Arquivo não enviado'
+    ]);
     exit;
 }
 
-$url = filter_var($input['url'], FILTER_VALIDATE_URL);
+$tmpFile = $_FILES['file']['tmp_name'];
 
-if (!$url) {
+if (!file_exists($tmpFile)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'URL inválida']);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Arquivo temporário inválido'
+    ]);
     exit;
 }
 
-// ===== CRIA PASTAS =====
-if (!is_dir($tempDir)) mkdir($tempDir, 0755, true);
-if (!is_dir($saveDir)) mkdir($saveDir, 0755, true);
+// ===== VALIDA MIME =====
+$finfo = finfo_open(FILEINFO_MIME_TYPE);
+$mime = finfo_file($finfo, $tmpFile);
+finfo_close($finfo);
 
-// ===== BAIXA IMAGEM =====
-$ext = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
-$inputFile  = $tempDir . uniqid('in_') . '.' . $ext;
-$outputFile = $saveDir . uniqid('img_') . '.jpg';
-
-$imageData = @file_get_contents($url);
-
-if (!$imageData) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Erro ao baixar imagem']);
+if (strpos($mime, 'image') === false) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Arquivo não é imagem válida'
+    ]);
     exit;
 }
 
-file_put_contents($inputFile, $imageData);
+// ===== CRIA PASTA =====
+if (!is_dir($saveDir)) {
+    mkdir($saveDir, 0755, true);
+}
 
-// ===== CONVERSÃO FFMPEG =====
-$cmd = "ffmpeg -y -i \"$inputFile\" -vf \"scale='min($maxWidth,iw)':-2\" -q:v 2 \"$outputFile\" 2>&1";
+// ===== GERA NOME ÚNICO =====
+$hash = md5_file($tmpFile);
+$outputFile = $saveDir . $hash . '.jpg';
+$publicUrl  = $publicBaseUrl . $hash . '.jpg';
+
+// Se já convertido antes
+if (file_exists($outputFile)) {
+    echo json_encode([
+        'success' => true,
+        'cached'  => true,
+        'url'     => $publicUrl
+    ]);
+    exit;
+}
+
+// ===== CONVERSÃO COM FFMPEG =====
+$cmd = "ffmpeg -y -i \"$tmpFile\" -vf \"scale='min($maxWidth,iw)':-2\" -c:v mjpeg -pix_fmt yuvj420p -qscale:v 3 \"$outputFile\" 2>&1";
 exec($cmd, $output, $returnCode);
 
-unlink($inputFile);
-
-if ($returnCode !== 0 || !file_exists($outputFile)) {
+if ($returnCode !== 0 || !file_exists($outputFile) || filesize($outputFile) < 1000) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Erro na conversão', 'ffmpeg' => $output]);
+    echo json_encode([
+        'success' => false,
+        'error'   => 'Erro na conversão',
+        'ffmpeg_output' => $output
+    ]);
     exit;
 }
 
-// ===== RETORNO =====
+// ===== SUCESSO =====
 echo json_encode([
     'success' => true,
-    'file' => basename($outputFile),
-    'path' => $outputFile
+    'cached'  => false,
+    'url'     => $publicUrl
 ]);
