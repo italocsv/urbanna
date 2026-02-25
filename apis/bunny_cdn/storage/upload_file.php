@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/../auth/read_token.php';
+require __DIR__ . '/../authentication/read_token.php';
 
 header("Content-Type: application/json");
 
