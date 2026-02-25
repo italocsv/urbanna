@@ -1,5 +1,5 @@
 <?php
 
 function getBunnyToken() {
-    return "72ec0af9-8cda-471a-b3ff70801ff8-881b-4054";
+    return "bd4bbc47-e41c-4b42-96b5e65f0727-01ef-4f3f";
 }
