@@ -29,7 +29,7 @@ if (!$input) {
     exit(json_encode(["success"=>false,"error"=>"JSON inválido"]));
 }
 
-$required = ['video_url','storage_zone_name','file_name'];
+$required = ['file_url','storage_zone_name','file_name'];
 
 foreach ($required as $field) {
     if (empty($input[$field])) {
@@ -38,14 +38,14 @@ foreach ($required as $field) {
     }
 }
 
-$video_url = trim($input['video_url']);
+$file_url = trim($input['file_url']);
 $storage_zone_name = trim($input['storage_zone_name']);
 $path = isset($input['path']) ? trim($input['path']) : '';
 $file_name = trim($input['file_name']);
 
-if (!filter_var($video_url, FILTER_VALIDATE_URL)) {
+if (!filter_var($file_url, FILTER_VALIDATE_URL)) {
     http_response_code(400);
-    exit(json_encode(["success"=>false,"error"=>"video_url inválida"]));
+    exit(json_encode(["success"=>false,"error"=>"file_url inválida"]));
 }
 
 /*
@@ -62,7 +62,7 @@ if (!empty($path)) {
 
 $endpoint .= rawurlencode($file_name);
 
-$readStream = fopen($video_url, 'rb');
+$readStream = fopen($file_url, 'rb');
 
 if (!$readStream) {
     http_response_code(500);
