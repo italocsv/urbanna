@@ -5,9 +5,9 @@ header('Content-Type: application/json; charset=utf-8');
 $ffmpegBin  = 'ffmpeg';
 $ffprobeBin = 'ffprobe';
 
-$baseDir = __DIR__;
+$baseDir = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
 $tempDir = $baseDir . '/temp/';
-$outDir = $baseDir . '/runtime/videos/';
+$outDir  = $baseDir . '/runtime/videos/';
 $publicBaseUrl = 'https://services.urbanna.com.br/runtime/videos/';
 
 $maxDownloadBytes = 500 * 1024 * 1024; // 500MB
