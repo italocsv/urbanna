@@ -8,7 +8,7 @@ $ffprobeBin = 'ffprobe';
 $baseDir = __DIR__;
 $tempDir = $baseDir . '/temp/';
 $outDir = $baseDir . '/runtime/videos/';
-$publicBaseUrl = 'https://services.urbanna.com.br/apps/videos/runtime/videos/';
+$publicBaseUrl = 'https://services.urbanna.com.br/apps/runtime/videos/';
 
 $maxDownloadBytes = 500 * 1024 * 1024; // 500MB
 
