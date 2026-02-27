@@ -62,11 +62,40 @@ if (!empty($path)) {
 
 $endpoint .= rawurlencode($file_name);
 
-$readStream = fopen($file_url, 'rb');
+/*
+====================================================
+ABRE ARQUIVO LOCAL OU REMOTO
+====================================================
+*/
+
+$parsed = parse_url($file_url);
+
+if (!$parsed || empty($parsed['path'])) {
+    http_response_code(400);
+    exit(json_encode([
+        "success"=>false,
+        "error"=>"URL inválida ou sem path"
+    ]));
+}
+
+$docRoot = rtrim($_SERVER['DOCUMENT_ROOT'], '/');
+$localPath = $docRoot . '/' . ltrim($parsed['path'], '/');
+
+if (file_exists($localPath)) {
+    // 🔥 Arquivo está no mesmo servidor
+    $readStream = fopen($localPath, 'rb');
+} else {
+    // 🌍 Arquivo remoto
+    $readStream = fopen($file_url, 'rb');
+}
 
 if (!$readStream) {
     http_response_code(500);
-    exit(json_encode(["success"=>false,"error"=>"Falha ao abrir stream da URL"]));
+    exit(json_encode([
+        "success"=>false,
+        "error"=>"Falha ao abrir arquivo (local ou remoto)",
+        "debug_path"=>$localPath
+    ]));
 }
 
 $ch = curl_init($endpoint);
