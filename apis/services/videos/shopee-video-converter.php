@@ -141,7 +141,9 @@ $finalSize = filesize($outFile);
 if ($finalSize > $maxOutputBytes) {
 
     @unlink($outFile);
-
+    
+    // Código original comentado para melhorar o som, que em alguns videos ficam ruins! alterado em 12/04/2026
+    /*
     $targetBits = $maxOutputBytes * 8;
     $newBitrate = intval(($targetBits / $duration) / 1000);
 
@@ -152,6 +154,20 @@ if ($finalSize > $maxOutputBytes) {
            " -c:v libx264 -preset veryfast -b:v {$newBitrate}k" .
            " -c:a aac -b:a 96k -movflags +faststart " .
            escapeshellarg($outFile);
+    */
+
+    $targetBits = $maxOutputBytes * 8;
+    $audioBits = 128 * 1000 * $duration;
+    $newBitrate = intval(($targetBits - $audioBits) / $duration / 1000);
+
+    if ($newBitrate < 300) $newBitrate = 300;
+
+    $cmd = "$ffmpegBin -y -i " . escapeshellarg($inFile) .
+       " $cutOption" .
+       " -c:v libx264 -preset veryfast -b:v {$newBitrate}k" .
+       " -c:a aac -b:a 128k -movflags +faststart " .
+       escapeshellarg($outFile);
+
 
     exec($cmd . " 2>&1", $convOut, $convCode);
 
