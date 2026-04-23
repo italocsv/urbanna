@@ -11,7 +11,7 @@ define('READ_ONLY', false);
 
 $DATABASES = array(
     'urbanna_postgre' => array(
-        'host' => 'urbanna-postgre',
+        'host' => 'i8kow444gss4gwosogkscg4o',
         'port' => '5432',
         'user' => 'postgres',
         'pass' => 'LeZMUTSHH8xpKoOCbsH34qtjYnTKIHl72ecZNOR9c6n4HupT6lLikN0vPNAsegFr',
