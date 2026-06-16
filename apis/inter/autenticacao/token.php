@@ -7,8 +7,8 @@ define('API_KEY',       'M2emsvjmt*20'); // ex: uuidv4 ou string aleatória
 define('CLIENT_ID',     'b3ae379c-57d4-4b63-8e1f-8dc7814549de');
 define('CLIENT_SECRET', '23aa6f68-9e2b-4312-9b26-d9d8085259a0');
 define('SCOPE',         'cob.write cob.read cobv.write cobv.read pix.write pix.read');
-define('CERT_PATH',     '/var/inter/certs/cert.crt');
-define('KEY_PATH',      '/var/inter/certs/key.key');
+define('CERT_PATH', __DIR__ . '/../certs/cert.crt');
+define('KEY_PATH',  __DIR__ . '/../certs/key.key');
 define('TOKEN_URL',     'https://cdpj.partners.bancointer.com.br/oauth/v2/token');
 
 // ============================================================
