@@ -25,7 +25,7 @@ $tentativasConexao = 2;
 for ($i = 0; $i < $tentativasConexao; $i++) {
     try {
         $pdo = new PDO(
-            "mysql:host=br952.hostgator.com.br;dbname=lojaur05_webhooks;charset=utf8mb4",
+            "mysql:host=148.230.72.178;dbname=lojaur05_webhooks;charset=utf8mb4",
             "lojaur05_admin",
             "M2emsvjmt*20",
             [

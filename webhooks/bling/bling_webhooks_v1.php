@@ -10,7 +10,7 @@ $pdo = null;
 // Tentativa de conexão com o banco
 for ($i = 0; $i < $tentativas_conexao; $i++) {
     try {
-        $pdo = new PDO("mysql:host=br952.hostgator.com.br;dbname=lojaur05_webhooks;charset=utf8", "lojaur05_admin", "M2emsvjmt*20", [
+        $pdo = new PDO("mysql:host=148.230.72.178;dbname=lojaur05_webhooks;charset=utf8", "lojaur05_admin", "M2emsvjmt*20", [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_PERSISTENT => false
         ]);
