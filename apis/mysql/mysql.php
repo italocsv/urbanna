@@ -17,7 +17,7 @@ declare(strict_types=1);
 | - Timeout de lock.
 | - Limite de body.
 | - Limite de tamanho da query.
-| - Limite de registros retornados.
+| - Limite de registros configurável (0 = ilimitado).
 | - Whitelist de bancos.
 | - Bloqueio de comandos administrativos/perigosos.
 | - Log de erros.
@@ -89,7 +89,9 @@ const QUERY_TIMEOUT_SECONDS = 10;
 const INNODB_LOCK_WAIT_TIMEOUT = 5;
 
 // Máximo de registros retornados.
-const MAX_RESULT_ROWS = 1000;
+// 0 = ilimitado (compatibilidade com rotinas antigas).
+// ATENÇÃO: respostas muito grandes ainda ficam limitadas por memória/tempo do PHP e infraestrutura.
+const MAX_RESULT_ROWS = 0;
 
 // Considera query lenta a partir de:
 const SLOW_QUERY_MS = 1500;
@@ -1631,8 +1633,8 @@ if (
          */
 
         if (
-            $count >
-            MAX_RESULT_ROWS
+            MAX_RESULT_ROWS > 0 &&
+            $count > MAX_RESULT_ROWS
         ) {
 
             @$result->free();
@@ -1756,14 +1758,6 @@ $conn = null;
 // ==========================================================================
 
 releaseConcurrency();
-
-
-// ==========================================================================
-// INFORMA SLOT UTILIZADO
-// ==========================================================================
-
-$payload['concurrency_slot'] =
-    $concurrencySlot;
 
 
 // ==========================================================================
