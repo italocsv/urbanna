@@ -17,8 +17,10 @@
 $cfg = [
     'host' => getenv('MIDIAS_DB_HOST') ?: '148.230.72.178',
     'database' => getenv('MIDIAS_DB_NAME') ?: 'lojaur05_tagplus',
-    'user' => getenv('URBANNA_DB_USER') ?: 'lojaur05_admin',
-    'password' => getenv('URBANNA_DB_PASS') ?: 'M2emsvjmt*20',
+    //'user' => getenv('URBANNA_DB_USER') ?: 'lojaur05_admin',
+    //'password' => getenv('URBANNA_DB_PASS') ?: '',
+    'user' => 'lojaur05_admin',
+    'password' => 'M2emsvjmt*20',
     'port' => getenv('MIDIAS_DB_PORT') ?: '3306',
     // Acrescente aqui outros hosts EXATOS caso os vídeos mudem de servidor.
     'video_hosts' => ['core.urbanna.com.br'],
