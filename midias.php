@@ -23,7 +23,7 @@ $cfg = [
     'password' => 'M2emsvjmt*20',
     'port' => getenv('MIDIAS_DB_PORT') ?: '3306',
     // Acrescente aqui outros hosts EXATOS caso os vídeos mudem de servidor.
-    'video_hosts' => ['core.urbanna.com.br'],
+    'video_hosts' => ['core.urbanna.com.br','urbanna.b-cdn.net'],
 ];
 ini_set('display_errors', '0');
 ini_set('session.use_strict_mode', '1');
